@@ -4,6 +4,7 @@ import {
   listLoginUsers,
   updateUserPassword,
   setUserDisabled,
+  deleteUserAccount,
   ADMIN_USERNAME
 } from '../accounts.js';
 
@@ -60,6 +61,11 @@ async function renderUserList() {
             <button type="button" data-action="toggle" data-username="${escapeHtml(u.username)}" data-disabled="${u.disabled}"
               class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-cream">
               ${u.disabled ? 'Активирай' : 'Деактивирай'}
+            </button>
+            <button type="button" data-action="delete" data-username="${escapeHtml(u.username)}"
+              data-label="${escapeHtml(u.displayName || u.username)}"
+              class="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
+              Изтрий
             </button>` : ''}
           </div>
         </div>
@@ -136,6 +142,25 @@ async function handleUserAction(e) {
       renderUserList();
     } catch (err) {
       showAdminError(err.message || 'Грешка при промяна.');
+    }
+    return;
+  }
+
+  if (action === 'delete') {
+    const label = btn.dataset.label || username;
+    if (!confirm(
+      `Изтриване на „${label}“ (@${username})?\n\n` +
+      'Ще бъдат изтрити завинаги акаунтът и всички негови доставки.\n' +
+      'Това действие не може да бъде отменено.'
+    )) return;
+
+    try {
+      await deleteUserAccount(username);
+      showAdminSuccess('Потребителят е изтрит.');
+      await refreshLoginSelect();
+      renderUserList();
+    } catch (err) {
+      showAdminError(err.message || 'Грешка при изтриване.');
     }
   }
 }

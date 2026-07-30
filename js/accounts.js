@@ -2,7 +2,8 @@ import {
   ref,
   get,
   set,
-  update
+  update,
+  remove
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js';
 import { getFirebaseDb } from './firebase.js';
 import { DEFAULT_SETTINGS } from './storage.js';
@@ -197,4 +198,21 @@ export async function setUserDisabled(username, disabled) {
     disabled,
     updatedAt: new Date().toISOString()
   });
+}
+
+/**
+ * Permanently delete a user account and all delivery data.
+ * @param {string} username
+ */
+export async function deleteUserAccount(username) {
+  const key = normalizeUsername(username);
+  if (!key) throw new Error('Невалиден потребител.');
+  if (isAdminUsername(key)) {
+    throw new Error('Не може да изтриете администратора.');
+  }
+
+  const snap = await get(accountRef(key));
+  if (!snap.exists()) throw new Error('Потребителят не е намерен.');
+
+  await remove(accountRef(key));
 }
