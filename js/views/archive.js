@@ -107,16 +107,22 @@ function renderTable(rows) {
     return;
   }
 
-  tbody.innerHTML = rows.map(row => `
-    <tr class="archive-row border-b border-slate-100" tabindex="0" role="button"
+  tbody.innerHTML = rows.map(row => {
+    const turnover = row.isPlanned ? row.plannedTurnover : row.turnover;
+    const dateLabel = row.isPlanned
+      ? `${formatShortDate(row.dateKey)} · план`
+      : formatShortDate(row.dateKey);
+
+    return `
+    <tr class="archive-row border-b border-slate-100 ${row.isPlanned ? 'bg-amber-50/60' : ''}" tabindex="0" role="button"
       data-date-key="${row.dateKey}" aria-label="Детайли за ${formatShortDate(row.dateKey)}">
-      <td class="py-2.5 px-3 font-medium text-navy">${formatShortDate(row.dateKey)}</td>
-      <td class="py-2.5 px-2 text-right">${formatEUR(row.turnover)}</td>
-      <td class="py-2.5 px-2 text-right text-accent-amber">${formatEUR(row.bonus)}</td>
-      <td class="py-2.5 px-2 text-right">${formatEUR(row.allowance)}</td>
-      <td class="py-2.5 px-3 text-right font-semibold text-success-dark">${formatEUR(row.total)}</td>
-    </tr>
-  `).join('');
+      <td class="py-2.5 px-3 font-medium text-navy">${dateLabel}</td>
+      <td class="py-2.5 px-2 text-right">${formatEUR(turnover)}</td>
+      <td class="py-2.5 px-2 text-right text-accent-amber">${row.isPlanned ? '—' : formatEUR(row.bonus)}</td>
+      <td class="py-2.5 px-2 text-right">${row.isPlanned ? '—' : formatEUR(row.allowance)}</td>
+      <td class="py-2.5 px-3 text-right font-semibold ${row.isPlanned ? 'text-navy' : 'text-success-dark'}">${row.isPlanned ? `${row.stopCount} сп.` : formatEUR(row.total)}</td>
+    </tr>`;
+  }).join('');
 
   const totals = rows.reduce(
     (acc, r) => ({

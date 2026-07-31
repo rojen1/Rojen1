@@ -34,6 +34,12 @@ export function calcDaySummary(deliveries, settings) {
   return { turnover, bonus, allowance, total };
 }
 
+/** Sum of all invoice amounts (delivered or not) — for planned routes */
+/** @param {import('./storage.js').Delivery[]} deliveries */
+export function calcPlannedTurnover(deliveries) {
+  return deliveries.reduce((sum, d) => sum + (d.amount || 0), 0);
+}
+
 /**
  * Aggregate monthly stats from all day records in a given month.
  * @param {Record<string, import('./storage.js').DayRecord>} allDays
@@ -44,6 +50,7 @@ export function calcDaySummary(deliveries, settings) {
 export function calcMonthSummary(allDays, year, month, settings) {
   const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
   const rows = [];
+  const today = todayKey();
 
   let totalTurnover = 0;
   let totalBonus = 0;
@@ -59,13 +66,24 @@ export function calcMonthSummary(allDays, year, month, settings) {
     if (!day?.deliveries?.length) continue;
 
     const summary = calcDaySummary(day.deliveries, settings);
-    if (summary.turnover === 0 && day.deliveries.every(d => !d.delivered)) continue;
+    const plannedTurnover = calcPlannedTurnover(day.deliveries);
+    const isFuture = dateKey > today;
+    const isPlanned = isFuture || (summary.turnover === 0 && day.deliveries.some(d => !d.delivered));
 
-    rows.push({ dateKey, ...summary });
-    totalTurnover += summary.turnover;
-    totalBonus += summary.bonus;
-    totalAllowance += summary.allowance;
-    totalDaily += summary.total;
+    rows.push({
+      dateKey,
+      ...summary,
+      plannedTurnover,
+      isPlanned,
+      stopCount: day.deliveries.length
+    });
+
+    if (!isFuture) {
+      totalTurnover += summary.turnover;
+      totalBonus += summary.bonus;
+      totalAllowance += summary.allowance;
+      totalDaily += summary.total;
+    }
   }
 
   const voucher = settings.monthlyVoucher;
