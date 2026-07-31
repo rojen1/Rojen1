@@ -98,6 +98,13 @@ export function todayKey() {
   return formatDateKey(now);
 }
 
+/** Tomorrow's date as YYYY-MM-DD */
+export function tomorrowKey() {
+  const now = new Date();
+  now.setDate(now.getDate() + 1);
+  return formatDateKey(now);
+}
+
 /** @param {Date} date */
 export function formatDateKey(date) {
   const y = date.getFullYear();

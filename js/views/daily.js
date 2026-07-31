@@ -1,5 +1,5 @@
-import { loadData, saveDay, getDay, getCurrentUsername } from '../storage.js';
-import { calcDaySummary, formatEUR, todayKey, generateId } from '../calculations.js';
+import { loadData, saveDay, getDay, getCurrentUsername, moveDayDeliveries } from '../storage.js';
+import { calcDaySummary, formatEUR, todayKey, tomorrowKey, formatDisplayDate, generateId } from '../calculations.js';
 import {
   LAST_REGION_KEY,
   groupDeliveriesByRegion,
@@ -23,6 +23,7 @@ export function initDailyView(cb) {
   document.getElementById('delivery-list')?.addEventListener('change', handleToggle);
   document.getElementById('delivery-list')?.addEventListener('click', handleDelete);
   document.getElementById('btn-copy-waybill')?.addEventListener('click', handleCopyWaybill);
+  document.getElementById('btn-move-to-tomorrow')?.addEventListener('click', handleMoveToTomorrow);
 }
 
 export function renderDailyView() {
@@ -36,6 +37,7 @@ export function renderDailyView() {
   renderDeliveryList(groups);
   updateSummaryBar(summary);
   updateWaybillButton(day.deliveries.length);
+  updateMoveToTomorrowButton(day.deliveries.length);
   updateSyncInfo(day.deliveries.length);
   callbacks.onDateUpdate?.(dateKey);
 }
@@ -56,6 +58,12 @@ function updateSyncInfo(todayCount) {
 
 function updateWaybillButton(deliveryCount) {
   const btn = document.getElementById('btn-copy-waybill');
+  if (!btn) return;
+  btn.classList.toggle('hidden', deliveryCount === 0);
+}
+
+function updateMoveToTomorrowButton(deliveryCount) {
+  const btn = document.getElementById('btn-move-to-tomorrow');
   if (!btn) return;
   btn.classList.toggle('hidden', deliveryCount === 0);
 }
@@ -270,6 +278,38 @@ async function handleCopyWaybill() {
     showToast('Копирано! Поставете във Viber и изпратете.');
   } catch {
     showToast('Неуспешно копиране. Опитайте отново.');
+  }
+}
+
+async function handleMoveToTomorrow() {
+  const fromDateKey = todayKey();
+  const toDateKey = tomorrowKey();
+  const day = getDay(fromDateKey);
+  const tomorrowDay = getDay(toDateKey);
+  const count = day.deliveries.length;
+
+  if (!count) {
+    showToast('Няма спирки за преместване.');
+    return;
+  }
+
+  let message =
+    `Преместване на ${count} спирки към ${formatDisplayDate(toDateKey)}?\n\n` +
+    'Днешният списък ще остане празен.';
+
+  if (tomorrowDay.deliveries.length) {
+    message +=
+      `\n\nВнимание: за утре вече има ${tomorrowDay.deliveries.length} спирки — ще бъдат добавени към тях.`;
+  }
+
+  if (!confirm(message)) return;
+
+  try {
+    await moveDayDeliveries(fromDateKey, toDateKey);
+    showToast(`${count} спирки са преместени за утре.`);
+    renderDailyView();
+  } catch (err) {
+    showToast(err.message || 'Грешка при преместване.');
   }
 }
 
