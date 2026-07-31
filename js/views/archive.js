@@ -12,6 +12,34 @@ import { groupDeliveriesByRegion } from '../regions.js';
 let currentYear;
 let currentMonth;
 
+/** @param {number} year @param {number} month 0-11 */
+function getNextMonth(year, month) {
+  if (month === 11) return { year: year + 1, month: 0 };
+  return { year, month: month + 1 };
+}
+
+/** @param {number} year @param {number} month 0-11 */
+function isFutureMonth(year, month) {
+  const now = new Date();
+  return year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth());
+}
+
+/** @param {Record<string, { deliveries?: unknown[] }>} allDays @param {number} year @param {number} month */
+function monthHasDeliveries(allDays, year, month) {
+  const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  return Object.keys(allDays).some(key => {
+    if (!key.startsWith(prefix)) return false;
+    return (allDays[key]?.deliveries?.length ?? 0) > 0;
+  });
+}
+
+/** @param {Record<string, { deliveries?: unknown[] }>} allDays */
+function canGoToNextMonth(allDays) {
+  const { year, month } = getNextMonth(currentYear, currentMonth);
+  if (!isFutureMonth(year, month)) return true;
+  return monthHasDeliveries(allDays, year, month);
+}
+
 export function initArchiveView() {
   const now = new Date();
   currentYear = now.getFullYear();
@@ -27,9 +55,8 @@ export function initArchiveView() {
   });
 
   document.getElementById('btn-next-month')?.addEventListener('click', () => {
-    const now = new Date();
-    const next = new Date(currentYear, currentMonth + 1, 1);
-    if (next > now) return;
+    const data = loadData();
+    if (!canGoToNextMonth(data.days)) return;
 
     currentMonth++;
     if (currentMonth > 11) {
@@ -51,6 +78,14 @@ export function renderArchiveView() {
 
   document.getElementById('archive-month-label').textContent =
     formatMonthLabel(currentYear, currentMonth);
+
+  const nextBtn = document.getElementById('btn-next-month');
+  if (nextBtn) {
+    const allowed = canGoToNextMonth(data.days);
+    nextBtn.disabled = !allowed;
+    nextBtn.classList.toggle('opacity-40', !allowed);
+    nextBtn.classList.toggle('pointer-events-none', !allowed);
+  }
 
   renderTable(summary.rows);
   renderSummaryCards(summary);

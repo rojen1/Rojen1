@@ -52,7 +52,13 @@ function updateSyncInfo(todayCount) {
     return;
   }
 
-  el.textContent = `Акаунт: ${username} · ${todayCount} спирки днес`;
+  const tomorrowCount = getDay(tomorrowKey()).deliveries.length;
+  let text = `Акаунт: ${username} · ${todayCount} спирки днес`;
+  if (tomorrowCount) {
+    text += ` · ${tomorrowCount} планирани за утре`;
+  }
+
+  el.textContent = text;
   el.classList.remove('hidden');
 }
 
