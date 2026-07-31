@@ -1,5 +1,13 @@
-import { loadData, saveDay, getDay, getCurrentUsername, moveDayDeliveries } from '../storage.js';
-import { calcDaySummary, formatEUR, todayKey, tomorrowKey, formatDisplayDate, generateId } from '../calculations.js';
+import { loadData, saveDay, getDay, getCurrentUsername } from '../storage.js';
+import {
+  calcDaySummary,
+  formatEUR,
+  todayKey,
+  tomorrowKey,
+  formatDisplayDate,
+  formatShortDate,
+  generateId
+} from '../calculations.js';
 import {
   LAST_REGION_KEY,
   groupDeliveriesByRegion,
@@ -9,6 +17,8 @@ import {
   getRegionFromSelect
 } from '../regions.js';
 import { formatWaybillText, copyTextToClipboard } from '../waybill.js';
+
+const COURSE_DATE_KEY = 'rojen1_course_date';
 
 /** @type {import('../app.js').DailyViewCallbacks} */
 let callbacks = {};
@@ -23,26 +33,105 @@ export function initDailyView(cb) {
   document.getElementById('delivery-list')?.addEventListener('change', handleToggle);
   document.getElementById('delivery-list')?.addEventListener('click', handleDelete);
   document.getElementById('btn-copy-waybill')?.addEventListener('click', handleCopyWaybill);
-  document.getElementById('btn-move-to-tomorrow')?.addEventListener('click', handleMoveToTomorrow);
+  document.getElementById('btn-course-today')?.addEventListener('click', () => selectCourseDate(todayKey()));
+  document.getElementById('btn-course-tomorrow')?.addEventListener('click', () => selectCourseDate(tomorrowKey()));
 }
 
 export function renderDailyView() {
-  const dateKey = todayKey();
+  const dateKey = getCourseDateKey();
   const data = loadData();
   const day = getDay(dateKey);
   const summary = calcDaySummary(day.deliveries, data.settings);
   const groups = groupDeliveriesByRegion(day.deliveries);
 
+  updateCourseDateSwitch(dateKey);
+  updateListTitle(dateKey);
   renderRegionProgress(groups);
   renderDeliveryList(groups);
   updateSummaryBar(summary);
   updateWaybillButton(day.deliveries.length);
-  updateMoveToTomorrowButton(day.deliveries.length);
-  updateSyncInfo(day.deliveries.length);
+  updateSyncInfo(dateKey, day.deliveries.length);
   callbacks.onDateUpdate?.(dateKey);
 }
 
-function updateSyncInfo(todayCount) {
+/** Resolve which day the daily course shows (today or tomorrow planning). */
+function getCourseDateKey() {
+  const today = todayKey();
+  const tomorrow = tomorrowKey();
+  const stored = sessionStorage.getItem(COURSE_DATE_KEY);
+
+  if (stored === tomorrow && stored !== today) {
+    return tomorrow;
+  }
+
+  if (stored !== today) {
+    sessionStorage.setItem(COURSE_DATE_KEY, today);
+  }
+  return today;
+}
+
+/** @param {string} dateKey */
+function selectCourseDate(dateKey) {
+  const today = todayKey();
+  const tomorrow = tomorrowKey();
+  if (dateKey !== today && dateKey !== tomorrow) return;
+
+  sessionStorage.setItem(COURSE_DATE_KEY, dateKey);
+  renderDailyView();
+}
+
+/** @param {string} dateKey */
+function updateCourseDateSwitch(dateKey) {
+  const today = todayKey();
+  const tomorrow = tomorrowKey();
+  const isToday = dateKey === today;
+  const isTomorrow = dateKey === tomorrow;
+
+  const todayBtn = document.getElementById('btn-course-today');
+  const tomorrowBtn = document.getElementById('btn-course-tomorrow');
+  const hint = document.getElementById('course-date-hint');
+
+  if (todayBtn) {
+    todayBtn.classList.toggle('course-date-btn--active', isToday);
+    todayBtn.setAttribute('aria-pressed', String(isToday));
+  }
+
+  if (tomorrowBtn) {
+    tomorrowBtn.classList.toggle('course-date-btn--active', isTomorrow);
+    tomorrowBtn.setAttribute('aria-pressed', String(isTomorrow));
+    tomorrowBtn.textContent = today === tomorrow ? 'Утре' : `Утре (${formatShortDate(tomorrow)})`;
+  }
+
+  if (hint) {
+    if (isTomorrow) {
+      hint.textContent = `Планирате курса за ${formatDisplayDate(tomorrow)} — днешните спирки не се променят.`;
+      hint.classList.remove('hidden');
+    } else {
+      hint.classList.add('hidden');
+    }
+  }
+}
+
+/** @param {string} dateKey */
+function updateListTitle(dateKey) {
+  const title = document.getElementById('delivery-list-title');
+  if (!title) return;
+
+  if (dateKey === todayKey()) {
+    title.textContent = 'Спирки за днес';
+    return;
+  }
+
+  if (dateKey === tomorrowKey()) {
+    title.textContent = 'Спирки за утре';
+    return;
+  }
+
+  title.textContent = `Спирки · ${formatShortDate(dateKey)}`;
+}
+
+/** @param {string} activeDateKey @param {number} activeCount */
+function updateSyncInfo(activeDateKey, activeCount) {
   const el = document.getElementById('daily-sync-info');
   if (!el) return;
 
@@ -52,10 +141,25 @@ function updateSyncInfo(todayCount) {
     return;
   }
 
-  const tomorrowCount = getDay(tomorrowKey()).deliveries.length;
-  let text = `Акаунт: ${username} · ${todayCount} спирки днес`;
-  if (tomorrowCount) {
-    text += ` · ${tomorrowCount} планирани за утре`;
+  const today = todayKey();
+  const tomorrow = tomorrowKey();
+  const todayCount = getDay(today).deliveries.length;
+  const tomorrowCount = getDay(tomorrow).deliveries.length;
+
+  let text = `Акаунт: ${username}`;
+
+  if (activeDateKey === today) {
+    text += ` · ${activeCount} спирки днес`;
+    if (tomorrowCount) {
+      text += ` · ${tomorrowCount} планирани за утре`;
+    }
+  } else if (activeDateKey === tomorrow) {
+    text += ` · ${activeCount} спирки за утре`;
+    if (todayCount) {
+      text += ` · ${todayCount} за днес`;
+    }
+  } else {
+    text += ` · ${activeCount} спирки`;
   }
 
   el.textContent = text;
@@ -64,12 +168,6 @@ function updateSyncInfo(todayCount) {
 
 function updateWaybillButton(deliveryCount) {
   const btn = document.getElementById('btn-copy-waybill');
-  if (!btn) return;
-  btn.classList.toggle('hidden', deliveryCount === 0);
-}
-
-function updateMoveToTomorrowButton(deliveryCount) {
-  const btn = document.getElementById('btn-move-to-tomorrow');
   if (!btn) return;
   btn.classList.toggle('hidden', deliveryCount === 0);
 }
@@ -240,7 +338,7 @@ async function handleAddDelivery(e) {
   }
   if (!clientName || isNaN(amount) || amount < 0) return;
 
-  const dateKey = todayKey();
+  const dateKey = getCourseDateKey();
   const day = getDay(dateKey);
 
   day.deliveries.push({
@@ -259,13 +357,14 @@ async function handleAddDelivery(e) {
     amountInput.value = '';
     clientInput.focus();
     callbacks.onDeliveryAdded?.();
+    renderDailyView();
   } catch (err) {
     showToast(err.message || 'Грешка при запис.');
   }
 }
 
 async function handleCopyWaybill() {
-  const dateKey = todayKey();
+  const dateKey = getCourseDateKey();
   const data = loadData();
   const day = getDay(dateKey);
 
@@ -287,43 +386,11 @@ async function handleCopyWaybill() {
   }
 }
 
-async function handleMoveToTomorrow() {
-  const fromDateKey = todayKey();
-  const toDateKey = tomorrowKey();
-  const day = getDay(fromDateKey);
-  const tomorrowDay = getDay(toDateKey);
-  const count = day.deliveries.length;
-
-  if (!count) {
-    showToast('Няма спирки за преместване.');
-    return;
-  }
-
-  let message =
-    `Преместване на ${count} спирки към ${formatDisplayDate(toDateKey)}?\n\n` +
-    'Днешният списък ще остане празен.';
-
-  if (tomorrowDay.deliveries.length) {
-    message +=
-      `\n\nВнимание: за утре вече има ${tomorrowDay.deliveries.length} спирки — ще бъдат добавени към тях.`;
-  }
-
-  if (!confirm(message)) return;
-
-  try {
-    await moveDayDeliveries(fromDateKey, toDateKey);
-    showToast(`${count} спирки са преместени за утре.`);
-    renderDailyView();
-  } catch (err) {
-    showToast(err.message || 'Грешка при преместване.');
-  }
-}
-
 async function handleToggle(e) {
   if (e.target.dataset.action !== 'toggle') return;
 
   const id = e.target.dataset.id;
-  const dateKey = todayKey();
+  const dateKey = getCourseDateKey();
   const day = getDay(dateKey);
   const delivery = day.deliveries.find(d => d.id === id);
   if (!delivery) return;
@@ -332,6 +399,7 @@ async function handleToggle(e) {
 
   try {
     await saveDay(dateKey, day);
+    renderDailyView();
   } catch (err) {
     e.target.checked = !e.target.checked;
     showToast(err.message || 'Грешка при запис.');
@@ -343,7 +411,7 @@ async function handleDelete(e) {
   if (!btn) return;
 
   const id = btn.dataset.id;
-  const dateKey = todayKey();
+  const dateKey = getCourseDateKey();
   const day = getDay(dateKey);
   const delivery = day.deliveries.find(d => d.id === id);
   if (!delivery) return;
@@ -354,6 +422,7 @@ async function handleDelete(e) {
 
   try {
     await saveDay(dateKey, day);
+    renderDailyView();
   } catch (err) {
     showToast(err.message || 'Грешка при запис.');
   }

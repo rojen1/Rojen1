@@ -253,34 +253,6 @@ export async function saveDay(dateKey, dayRecord) {
   await set(dayRef(currentUsername, dateKey), record);
 }
 
-/**
- * Move all deliveries from one day to another (e.g. Friday planning → Saturday).
- * @param {string} fromDateKey
- * @param {string} toDateKey
- * @returns {Promise<number>} number of moved deliveries
- */
-export async function moveDayDeliveries(fromDateKey, toDateKey) {
-  if (!currentUsername) throw new Error('Not signed in');
-  if (fromDateKey === toDateKey) {
-    throw new Error('Изберете различни дати.');
-  }
-
-  const fromDay = getDay(fromDateKey);
-  if (!fromDay.deliveries.length) {
-    throw new Error('Няма спирки за преместване.');
-  }
-
-  const movedCount = fromDay.deliveries.length;
-  const toDay = getDay(toDateKey);
-  toDay.deliveries = [...toDay.deliveries, ...fromDay.deliveries];
-  fromDay.deliveries = [];
-
-  await saveDay(toDateKey, toDay);
-  await saveDay(fromDateKey, fromDay);
-
-  return movedCount;
-}
-
 export async function clearAllData() {
   if (!currentUsername) throw new Error('Not signed in');
 

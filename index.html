@@ -163,6 +163,22 @@
       <!-- Daily Run View -->
       <section id="view-daily" class="view-panel px-4 pt-4 space-y-4" aria-label="Дневен курс">
 
+        <!-- Course date: today vs tomorrow planning -->
+        <div>
+          <p class="text-xs font-medium text-slate-500 mb-2 px-1">Курс за</p>
+          <div id="course-date-switch" class="bg-white rounded-2xl shadow-card p-1 border border-navy/5 flex gap-1">
+            <button type="button" id="btn-course-today" aria-pressed="true"
+              class="course-date-btn course-date-btn--active flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all">
+              Днес
+            </button>
+            <button type="button" id="btn-course-tomorrow" aria-pressed="false"
+              class="course-date-btn flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all">
+              Утре
+            </button>
+          </div>
+          <p id="course-date-hint" class="hidden text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2"></p>
+        </div>
+
         <!-- Add Delivery Form -->
         <div class="bg-white rounded-2xl shadow-card p-4 border border-navy/5">
           <h2 class="text-sm font-bold text-navy mb-3 flex items-center gap-2">
@@ -199,14 +215,10 @@
         <!-- Delivery List -->
         <div>
           <div class="flex items-center justify-between mb-2 px-1">
-            <h2 class="text-sm font-bold text-navy">Спирки за днес</h2>
+            <h2 id="delivery-list-title" class="text-sm font-bold text-navy">Спирки за днес</h2>
             <span id="delivery-count" class="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded-lg shadow-sm">0</span>
           </div>
           <p id="daily-sync-info" class="text-xs text-slate-500 px-1 mb-2 hidden"></p>
-          <button type="button" id="btn-move-to-tomorrow"
-            class="hidden w-full mb-3 py-2.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 font-medium text-sm hover:bg-amber-100 active:scale-[0.98] transition-all">
-            Премести всички спирки за утре
-          </button>
           <button type="button" id="btn-copy-waybill"
             class="hidden w-full mb-3 py-3 rounded-xl bg-gradient-to-r from-navy to-navy-light text-white font-semibold text-sm shadow-md hover:shadow-lg active:scale-[0.98] transition-all">
             Копирай товарителница

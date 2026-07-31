@@ -522,3 +522,24 @@ body {
   background: rgba(30, 58, 95, 0.2);
   border-radius: 4px;
 }
+
+/* Daily course date switch (today / tomorrow) */
+.course-date-btn {
+  color: #64748b;
+  background: transparent;
+}
+
+.course-date-btn--active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.25);
+}
+
+[data-theme="dark"] .course-date-btn {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .course-date-btn--active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+}
