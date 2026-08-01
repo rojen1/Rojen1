@@ -19,7 +19,7 @@ export const DEFAULT_SETTINGS = {
 
 /** @typedef {{ id: string, clientName: string, amount: number, delivered: boolean, createdAt: string, region?: string, isCash?: boolean, cashReported?: boolean, note?: string }} Delivery */
 /** @typedef {{ deliveries: Delivery[], updatedAt: string }} DayRecord */
-/** @typedef {{ bonusPercent: number, dailyAllowance: number, monthlyVoucher: number }} Settings */
+/** @typedef {{ bonusPercent: number, dailyAllowance: number, monthlyVoucher: number, regions?: string[] }} Settings */
 /** @typedef {{ role: 'admin' | 'driver', username: string, displayName?: string, disabled?: boolean }} UserProfile */
 /** @typedef {{ settings: Settings, days: Record<string, DayRecord>, profile: UserProfile | null }} AppData */
 

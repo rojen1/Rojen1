@@ -1,4 +1,4 @@
-import { loadData, saveDay, getDay, getCurrentUsername } from '../storage.js';
+import { loadData, saveDay, getDay, getCurrentUsername, onDataChange } from '../storage.js';
 import {
   calcDaySummary,
   calcCashSummary,
@@ -17,6 +17,7 @@ import {
   syncRegionOtherVisibility,
   getRegionFromSelect
 } from '../regions.js';
+import { getSavedRegions, addSavedRegion, removeSavedRegion } from '../user-regions.js';
 import { formatWaybillText, copyTextToClipboard } from '../waybill.js';
 import { collectClientNames, hasClientOnDay } from '../client-history.js';
 import { moveDeliveryInRegion, reorderDeliveryBefore } from '../reorder.js';
@@ -38,7 +39,10 @@ export function initDailyView(cb) {
   callbacks = cb;
 
   populateRegionSelect();
+  renderRegionManageList();
+  onDataChange(refreshRegionUi);
   document.getElementById('input-region')?.addEventListener('change', handleRegionSelectChange);
+  document.getElementById('region-list')?.addEventListener('click', handleRegionListClick);
   document.getElementById('form-add-delivery')?.addEventListener('submit', handleAddDelivery);
   document.getElementById('delivery-list')?.addEventListener('change', handleToggle);
   document.getElementById('delivery-list')?.addEventListener('click', handleCardClick);
@@ -198,11 +202,63 @@ function updateWaybillButton(deliveryCount) {
   btn.classList.toggle('hidden', deliveryCount === 0);
 }
 
+function refreshRegionUi() {
+  populateRegionSelect();
+  renderRegionManageList();
+}
+
 function populateRegionSelect() {
   fillRegionSelect(
     document.getElementById('input-region'),
-    document.getElementById('input-region-other')
+    document.getElementById('input-region-other'),
+    { regions: getSavedRegions() }
   );
+}
+
+function renderRegionManageList() {
+  const list = document.getElementById('region-list');
+  if (!list) return;
+
+  const regions = getSavedRegions();
+  if (!regions.length) {
+    list.innerHTML = '<li class="text-xs text-slate-400 px-1">Няма запазени райони. Изберете „Добави нов…“.</li>';
+    return;
+  }
+
+  list.innerHTML = regions.map(region => `
+    <li class="region-manage-row">
+      <span class="region-manage-name">${escapeHtml(region)}</span>
+      <button type="button" class="region-delete-btn" data-action="delete-region" data-region="${escapeHtml(region)}"
+        aria-label="Премахни ${escapeHtml(region)}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </button>
+    </li>
+  `).join('');
+}
+
+async function handleRegionListClick(e) {
+  const btn = e.target.closest('[data-action="delete-region"]');
+  if (!btn) return;
+
+  const region = btn.dataset.region;
+  if (!region) return;
+
+  if (!confirm(`Премахни „${region}“ от списъка?`)) return;
+
+  try {
+    await removeSavedRegion(region);
+    const select = document.getElementById('input-region');
+    if (select?.value === region) {
+      select.value = '';
+    }
+    refreshRegionUi();
+    showToast('Районът е премахнат');
+  } catch (err) {
+    showToast(err.message || 'Грешка при запис.');
+  }
 }
 
 function handleRegionSelectChange() {
@@ -457,10 +513,18 @@ async function handleAddDelivery(e) {
 
   try {
     await saveDay(dateKey, day);
+    await addSavedRegion(region);
     sessionStorage.setItem(LAST_REGION_KEY, region);
     clientInput.value = '';
     amountInput.value = '';
     if (noteInput) noteInput.value = '';
+    refreshRegionUi();
+    const select = document.getElementById('input-region');
+    if (select) select.value = region;
+    syncRegionOtherVisibility(
+      select,
+      document.getElementById('input-region-other')
+    );
     clientInput.focus();
     callbacks.onDeliveryAdded?.();
     renderDailyView();

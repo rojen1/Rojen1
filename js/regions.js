@@ -13,18 +13,37 @@ export const OTHER_REGION_VALUE = '__other__';
 export const LAST_REGION_KEY = 'rozhen1_last_region';
 export const NO_REGION_LABEL = 'Без район';
 
+/** @param {string[]} regions */
+export function dedupeRegions(regions) {
+  /** @type {string[]} */
+  const out = [];
+  /** @type {Set<string>} */
+  const seen = new Set();
+
+  for (const region of regions) {
+    const trimmed = region.trim();
+    const key = trimmed.toLowerCase();
+    if (!trimmed || seen.has(key)) continue;
+    seen.add(key);
+    out.push(trimmed);
+  }
+
+  return out;
+}
+
 /**
  * @param {HTMLSelectElement | null} select
  * @param {HTMLInputElement | null} otherInput
- * @param {{ lastRegion?: string }} [options]
+ * @param {{ lastRegion?: string, regions?: string[] }} [options]
  */
 export function fillRegionSelect(select, otherInput, options = {}) {
   if (!select) return;
 
+  const regions = options.regions ?? DEFAULT_REGIONS;
   const lastRegion = options.lastRegion ?? sessionStorage.getItem(LAST_REGION_KEY) ?? '';
   select.innerHTML = '<option value="">— Изберете район —</option>';
 
-  for (const region of DEFAULT_REGIONS) {
+  for (const region of regions) {
     const opt = document.createElement('option');
     opt.value = region;
     opt.textContent = region;
@@ -33,7 +52,7 @@ export function fillRegionSelect(select, otherInput, options = {}) {
 
   const otherOpt = document.createElement('option');
   otherOpt.value = OTHER_REGION_VALUE;
-  otherOpt.textContent = 'Други…';
+  otherOpt.textContent = 'Добави нов…';
   select.appendChild(otherOpt);
 
   if (lastRegion && [...select.options].some(o => o.value === lastRegion)) {

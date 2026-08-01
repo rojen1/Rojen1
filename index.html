@@ -192,8 +192,12 @@
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 focus:border-navy/40 text-sm">
                 <option value="">— Изберете район —</option>
               </select>
-              <input type="text" id="input-region-other" placeholder="Име на район"
+              <input type="text" id="input-region-other" placeholder="Име на нов район"
                 class="hidden w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 focus:border-navy/40 text-sm">
+              <div id="region-manage" class="mt-2">
+                <p class="text-xs font-medium text-slate-500 mb-1">Моите райони</p>
+                <ul id="region-list" class="region-manage-list" aria-label="Списък с райони"></ul>
+              </div>
             </div>
             <div>
               <label for="input-client" class="block text-xs font-medium text-slate-500 mb-1">Клиент / Фирма</label>
