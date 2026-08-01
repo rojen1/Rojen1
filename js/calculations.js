@@ -34,19 +34,16 @@ export function calcDaySummary(deliveries, settings) {
   return { turnover, bonus, allowance, total };
 }
 
-/** Cash collected and still to report to the warehouse. */
+/** Cash collected in delivered stops marked as cash payment. */
 /** @param {import('./storage.js').Delivery[]} deliveries */
 export function calcCashSummary(deliveries) {
   const cash = deliveries.filter(d => d.isCash);
-  const toReport = cash.filter(d => d.delivered && !d.cashReported);
-  const reported = cash.filter(d => d.cashReported);
+  const toReport = cash.filter(d => d.delivered);
   const pendingDelivery = cash.filter(d => !d.delivered);
 
   return {
     toReportAmount: toReport.reduce((sum, d) => sum + d.amount, 0),
     toReportCount: toReport.length,
-    reportedAmount: reported.reduce((sum, d) => sum + d.amount, 0),
-    reportedCount: reported.length,
     pendingAmount: pendingDelivery.reduce((sum, d) => sum + d.amount, 0),
     pendingCount: pendingDelivery.length,
     totalCashCount: cash.length,

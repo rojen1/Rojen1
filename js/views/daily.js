@@ -318,15 +318,9 @@ function renderDeliveryCard(d) {
       </div>
       <div class="mt-3 flex flex-wrap items-center gap-2">
         <button type="button" data-action="set-payment" data-id="${d.id}" data-cash="false"
-          class="payment-chip ${!isCash ? 'payment-chip--active' : ''}">Фактура</button>
+          class="payment-chip ${!isCash ? 'payment-chip--active' : ''}">Банка</button>
         <button type="button" data-action="set-payment" data-id="${d.id}" data-cash="true"
           class="payment-chip ${isCash ? 'payment-chip--active payment-chip--cash' : ''}">💵 Брой</button>
-        ${isCash && d.delivered ? `
-          <button type="button" data-action="toggle-reported" data-id="${d.id}"
-            class="cash-reported-btn ${d.cashReported ? 'cash-reported-btn--done' : ''}">
-            ${d.cashReported ? '✓ Отчетено' : 'Маркирай отчетено'}
-          </button>
-        ` : ''}
       </div>
       ${d.delivered ? `
         <div class="mt-2 flex items-center gap-1.5 text-success-dark text-xs font-medium">
@@ -365,17 +359,10 @@ function updateCashSummaryBar(deliveries) {
 
   const parts = [];
   if (cash.toReportCount) {
-    parts.push(`${cash.toReportCount} спирки за предаване в склад`);
-  }
-  if (cash.reportedCount) {
-    parts.push(`${cash.reportedCount} отчетени (${formatEUR(cash.reportedAmount)})`);
+    parts.push(`${cash.toReportCount} доставени в брой`);
   }
   if (cash.pendingCount) {
     parts.push(`${cash.pendingCount} в брой, още не доставени`);
-  }
-  if (!cash.toReportCount && !cash.pendingCount && cash.reportedCount) {
-    parts.unshift('Всичко отчетено');
-    amountEl.textContent = formatEUR(0);
   }
 
   detailEl.textContent = parts.join(' · ') || `${cash.totalCashCount} спирки в брой`;
@@ -414,7 +401,6 @@ async function handleAddDelivery(e) {
     region,
     delivered: false,
     isCash: addPaymentIsCash,
-    cashReported: false,
     createdAt: new Date().toISOString()
   });
 
@@ -464,9 +450,6 @@ async function handleToggle(e) {
   if (!delivery) return;
 
   delivery.delivered = e.target.checked;
-  if (!delivery.delivered) {
-    delivery.cashReported = false;
-  }
 
   try {
     await saveDay(dateKey, day);
@@ -496,13 +479,7 @@ async function handleCardClick(e) {
   if (!delivery) return;
 
   if (action === 'set-payment') {
-    const isCash = btn.dataset.cash === 'true';
-    delivery.isCash = isCash;
-    if (!isCash) {
-      delivery.cashReported = false;
-    }
-  } else if (action === 'toggle-reported') {
-    delivery.cashReported = !delivery.cashReported;
+    delivery.isCash = btn.dataset.cash === 'true';
   } else {
     return;
   }

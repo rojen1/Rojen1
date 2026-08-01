@@ -173,7 +173,7 @@ function openDayDetail(dateKey) {
     <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 col-span-2">
       <p class="text-xs text-amber-800">В брой за отчитане</p>
       <p class="font-bold text-amber-900">${formatEUR(cash.toReportAmount)}</p>
-      <p class="text-xs text-amber-700 mt-1">${cash.toReportCount} за предаване · ${cash.reportedCount} отчетени</p>
+      <p class="text-xs text-amber-700 mt-1">${cash.toReportCount} доставени · ${cash.pendingCount} предстоящи</p>
     </div>`;
   }
 
@@ -213,7 +213,7 @@ function openDayDetail(dateKey) {
               <div class="min-w-0">
                 <p class="day-detail-client font-medium text-navy truncate">${escapeHtml(d.clientName)}${d.isCash ? ' · брой' : ''}</p>
                 ${d.delivered
-                  ? `<p class="text-xs mt-0.5 ${d.isCash && !d.cashReported ? 'text-amber-700 font-medium' : 'text-success-dark font-medium'}">${d.isCash && !d.cashReported ? 'В брой · за отчитане' : d.isCash && d.cashReported ? 'В брой · отчетено' : 'Доставено'}</p>`
+                  ? `<p class="text-xs mt-0.5 ${d.isCash ? 'text-amber-700 font-medium' : 'text-success-dark font-medium'}">${d.isCash ? 'В брой' : 'Доставено'}</p>`
                   : '<p class="text-xs text-slate-400 mt-0.5">Недоставено</p>'}
               </div>
               <p class="day-detail-amount font-bold shrink-0 ${d.delivered ? '' : 'text-accent-coral'}">${formatEUR(d.amount)}</p>
