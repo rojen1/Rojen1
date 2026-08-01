@@ -442,16 +442,18 @@ async function handleAddDelivery(e) {
     if (!confirm(`„${clientName}“ вече е в списъка за този ден. Добави пак?`)) return;
   }
 
-  day.deliveries.push({
+  const newDelivery = {
     id: generateId(),
     clientName,
     amount,
     region,
     delivered: false,
     isCash: addPaymentIsCash,
-    note: note || undefined,
     createdAt: new Date().toISOString()
-  });
+  };
+  if (note) newDelivery.note = note;
+
+  day.deliveries.push(newDelivery);
 
   try {
     await saveDay(dateKey, day);
@@ -463,6 +465,7 @@ async function handleAddDelivery(e) {
     callbacks.onDeliveryAdded?.();
     renderDailyView();
   } catch (err) {
+    day.deliveries = day.deliveries.filter(d => d.id !== newDelivery.id);
     showToast(err.message || 'Грешка при запис.');
   }
 }
@@ -535,7 +538,12 @@ async function handleCardClick(e) {
   } else if (action === 'edit-note') {
     const next = prompt('Бележка за спирката:', delivery.note || '');
     if (next === null) return;
-    delivery.note = next.trim() || undefined;
+    const trimmed = next.trim();
+    if (trimmed) {
+      delivery.note = trimmed;
+    } else {
+      delete delivery.note;
+    }
   } else {
     return;
   }

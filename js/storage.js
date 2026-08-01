@@ -241,16 +241,37 @@ export async function updateSettings(settings) {
   return merged;
 }
 
+/** @param {unknown} value */
+function sanitizeForFirebase(value) {
+  if (value === undefined) return undefined;
+  if (value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {
+    return value.map(item => sanitizeForFirebase(item));
+  }
+
+  /** @type {Record<string, unknown>} */
+  const out = {};
+  for (const [key, val] of Object.entries(value)) {
+    if (val !== undefined) {
+      out[key] = sanitizeForFirebase(val);
+    }
+  }
+  return out;
+}
+
 /** @param {string} dateKey */
 /** @param {DayRecord} dayRecord */
 export async function saveDay(dateKey, dayRecord) {
   if (!currentUsername) throw new Error('Not signed in');
 
-  const record = { ...dayRecord, updatedAt: new Date().toISOString() };
-  cache.days[dateKey] = record;
-  notify();
+  const record = /** @type {DayRecord} */ (sanitizeForFirebase({
+    ...dayRecord,
+    updatedAt: new Date().toISOString()
+  }));
 
   await set(dayRef(currentUsername, dateKey), record);
+  cache.days[dateKey] = record;
+  notify();
 }
 
 export async function clearAllData() {
