@@ -7,6 +7,18 @@ const STORAGE_KEY = 'rojen1_cash_calc';
 /** @type {{ title: string, items: CashDenomination[] }[]} */
 export const CASH_SECTIONS = [
   {
+    title: 'Банкноти',
+    items: [
+      { value: 500, label: '500 €' },
+      { value: 200, label: '200 €' },
+      { value: 100, label: '100 €' },
+      { value: 50, label: '50 €' },
+      { value: 20, label: '20 €' },
+      { value: 10, label: '10 €' },
+      { value: 5, label: '5 €' }
+    ]
+  },
+  {
     title: 'Монети',
     items: [
       { value: 2, label: '2 €' },
@@ -17,18 +29,6 @@ export const CASH_SECTIONS = [
       { value: 0.05, label: '5 ст' },
       { value: 0.02, label: '2 ст' },
       { value: 0.01, label: '1 ст' }
-    ]
-  },
-  {
-    title: 'Купюри',
-    items: [
-      { value: 500, label: '500 €' },
-      { value: 200, label: '200 €' },
-      { value: 100, label: '100 €' },
-      { value: 50, label: '50 €' },
-      { value: 20, label: '20 €' },
-      { value: 10, label: '10 €' },
-      { value: 5, label: '5 €' }
     ]
   }
 ];

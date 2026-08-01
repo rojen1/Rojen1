@@ -732,6 +732,32 @@ body {
   color: #94a3b8;
 }
 
+.cash-calc-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  max-height: 90dvh;
+}
+
+.cash-calc-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.cash-calc-footer {
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .cash-calc-footer {
+  border-top-color: #334155;
+}
+
 .cash-calc-section-title {
   font-size: 0.75rem;
   font-weight: 700;

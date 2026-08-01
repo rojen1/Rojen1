@@ -565,29 +565,33 @@
   <div id="modal-cash-calc" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="cash-calc-title">
     <div id="cash-calc-backdrop" class="absolute inset-0 bg-navy/60 backdrop-blur-sm"></div>
     <div class="absolute inset-x-0 bottom-0 max-w-lg mx-auto animate-slide-up">
-      <div class="bg-white rounded-t-3xl shadow-2xl p-6 pb-safe max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-1">
-          <h2 id="cash-calc-title" class="text-lg font-bold text-navy">Преброи парите</h2>
-          <button id="btn-close-cash-calc" type="button" aria-label="Затвори"
-            class="w-9 h-9 rounded-xl bg-cream hover:bg-cream-dark flex items-center justify-center text-slate-500 active:scale-95 transition-all">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
+      <div class="cash-calc-sheet bg-white rounded-t-3xl shadow-2xl pb-safe">
+        <div class="cash-calc-header px-6 pt-6">
+          <div class="flex items-center justify-between mb-1">
+            <h2 id="cash-calc-title" class="text-lg font-bold text-navy">Преброи парите</h2>
+            <button id="btn-close-cash-calc" type="button" aria-label="Затвори"
+              class="w-9 h-9 rounded-xl bg-cream hover:bg-cream-dark flex items-center justify-center text-slate-500 active:scale-95 transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <p class="text-xs text-slate-500 mb-2">Въведи броя банкноти и монети — сумата се смята сама.</p>
         </div>
-        <p class="text-xs text-slate-500 mb-4">Въведи броя монети и купюри — сумата се смята сама.</p>
-        <div id="cash-calc-rows" class="space-y-4"></div>
-        <div class="mt-4 pt-4 border-t border-slate-100">
+        <div id="cash-calc-scroll" class="cash-calc-scroll px-6">
+          <div id="cash-calc-rows" class="space-y-4"></div>
+        </div>
+        <div class="cash-calc-footer px-6 pt-4 pb-6 border-t border-slate-100">
           <div class="flex justify-between items-center">
             <span class="text-sm font-semibold text-navy">Общо</span>
             <span id="cash-calc-total" class="text-2xl font-bold text-navy">0,00 €</span>
           </div>
           <p id="cash-calc-compare" class="hidden cash-calc-compare text-sm mt-2"></p>
+          <button type="button" id="btn-clear-cash-calc"
+            class="mt-4 w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm">
+            Изчисти всичко
+          </button>
         </div>
-        <button type="button" id="btn-clear-cash-calc"
-          class="mt-4 w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm">
-          Изчисти всичко
-        </button>
       </div>
     </div>
   </div>
