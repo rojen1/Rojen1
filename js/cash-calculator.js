@@ -144,13 +144,13 @@ function updateTotals() {
 
   if (Math.abs(diff) < 0.01) {
     compareEl.className = 'cash-calc-compare cash-calc-compare--ok';
-    compareEl.textContent = `Съвпада с „За отчитане“ (${formatEUR(expected)})`;
+    compareEl.textContent = `✓ Съвпада с „За отчитане“ (${formatEUR(expected)})`;
   } else if (diff > 0) {
     compareEl.className = 'cash-calc-compare cash-calc-compare--over';
-    compareEl.textContent = `+${formatEUR(diff)} над „За отчитане“ (${formatEUR(expected)})`;
+    compareEl.textContent = `▲ +${formatEUR(diff)} над „За отчитане“ (${formatEUR(expected)})`;
   } else {
     compareEl.className = 'cash-calc-compare cash-calc-compare--under';
-    compareEl.textContent = `${formatEUR(Math.abs(diff))} под „За отчитане“ (${formatEUR(expected)})`;
+    compareEl.textContent = `▼ ${formatEUR(Math.abs(diff))} под „За отчитане“ (${formatEUR(expected)})`;
   }
 }
 
