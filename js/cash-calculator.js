@@ -23,12 +23,12 @@ export const CASH_SECTIONS = [
     items: [
       { value: 2, label: '2 €' },
       { value: 1, label: '1 €' },
-      { value: 0.5, label: '50 ст' },
-      { value: 0.2, label: '20 ст' },
-      { value: 0.1, label: '10 ст' },
-      { value: 0.05, label: '5 ст' },
-      { value: 0.02, label: '2 ст' },
-      { value: 0.01, label: '1 ст' }
+      { value: 0.5, label: '0,50 €' },
+      { value: 0.2, label: '0,20 €' },
+      { value: 0.1, label: '0,10 €' },
+      { value: 0.05, label: '0,05 €' },
+      { value: 0.02, label: '0,02 €' },
+      { value: 0.01, label: '0,01 €' }
     ]
   }
 ];
