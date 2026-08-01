@@ -9,6 +9,7 @@ import {
   formatDisplayDate
 } from '../calculations.js';
 import { groupDeliveriesByRegion } from '../regions.js';
+import { exportMonthCsv } from '../export.js';
 
 let currentYear;
 let currentMonth;
@@ -71,6 +72,7 @@ export function initArchiveView() {
   document.getElementById('archive-table-body')?.addEventListener('keydown', handleRowKeydown);
   document.getElementById('btn-close-day-detail')?.addEventListener('click', closeDayDetail);
   document.getElementById('day-detail-backdrop')?.addEventListener('click', closeDayDetail);
+  document.getElementById('btn-export-month')?.addEventListener('click', handleExportMonth);
 }
 
 export function renderArchiveView() {
@@ -212,6 +214,7 @@ function openDayDetail(dateKey) {
             <li class="day-detail-item ${d.delivered ? 'delivered' : 'bg-cream'} rounded-xl p-3 border border-navy/5 flex items-center justify-between gap-3">
               <div class="min-w-0">
                 <p class="day-detail-client font-medium text-navy truncate">${escapeHtml(d.clientName)}${d.isCash ? ' · брой' : ''}</p>
+                ${d.note ? `<p class="text-xs text-slate-500 mt-0.5 truncate">📝 ${escapeHtml(d.note)}</p>` : ''}
                 ${d.delivered
                   ? `<p class="text-xs mt-0.5 ${d.isCash ? 'text-amber-700 font-medium' : 'text-success-dark font-medium'}">${d.isCash ? 'В брой' : 'Доставено'}</p>`
                   : '<p class="text-xs text-slate-400 mt-0.5">Недоставено</p>'}
@@ -231,6 +234,27 @@ function openDayDetail(dateKey) {
 function closeDayDetail() {
   document.getElementById('modal-day-detail').classList.add('hidden');
   document.body.style.overflow = '';
+}
+
+function handleExportMonth() {
+  const data = loadData();
+  const monthLabel = formatMonthLabel(currentYear, currentMonth);
+  exportMonthCsv(data.days, currentYear, currentMonth, data.settings, monthLabel);
+  showExportToast('Файлът е изтеглен. Отворете го с Excel.');
+}
+
+function showExportToast(message) {
+  const toast = document.getElementById('toast');
+  const inner = toast?.querySelector('div');
+  if (!inner) return;
+  inner.textContent = message;
+  toast.classList.add('show');
+  toast.classList.remove('hidden');
+  clearTimeout(showExportToast._timer);
+  showExportToast._timer = setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.classList.add('hidden'), 300);
+  }, 3000);
 }
 
 function escapeHtml(str) {

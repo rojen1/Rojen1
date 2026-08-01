@@ -5,23 +5,91 @@ import {
   updateUserPassword,
   setUserDisabled,
   deleteUserAccount,
+  fetchDriversDayStats,
   ADMIN_USERNAME
 } from '../accounts.js';
+import { formatDisplayDate, formatEUR, todayKey } from '../calculations.js';
+import { copyTextToClipboard } from '../waybill.js';
+
+const APP_URL = 'https://rojen1.github.io/Rojen1/';
 
 /** @type {string | null} */
 let resetTargetUsername = null;
 
 export function initAdminView() {
   document.getElementById('form-create-driver')?.addEventListener('submit', handleCreateUser);
-  document.getElementById('btn-refresh-drivers')?.addEventListener('click', renderUserList);
+  document.getElementById('btn-refresh-drivers')?.addEventListener('click', () => {
+    renderUserList();
+    renderFleetOverview();
+  });
+  document.getElementById('btn-refresh-fleet')?.addEventListener('click', renderFleetOverview);
+  document.getElementById('btn-copy-app-link')?.addEventListener('click', handleCopyAppLink);
   document.getElementById('admin-driver-list')?.addEventListener('click', handleUserAction);
   document.getElementById('form-reset-password')?.addEventListener('submit', handleResetPassword);
   document.getElementById('btn-close-reset')?.addEventListener('click', closeResetModal);
   document.getElementById('reset-backdrop')?.addEventListener('click', closeResetModal);
+
+  const qr = document.getElementById('admin-qr-code');
+  if (qr) {
+    qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(APP_URL)}`;
+  }
 }
 
 export function renderAdminView() {
+  renderFleetOverview();
   renderUserList();
+}
+
+async function renderFleetOverview() {
+  const list = document.getElementById('admin-fleet-list');
+  const dateEl = document.getElementById('admin-fleet-date');
+  if (!list) return;
+
+  const dateKey = todayKey();
+  if (dateEl) dateEl.textContent = formatDisplayDate(dateKey);
+
+  list.innerHTML = '<li class="text-center text-slate-400 text-sm py-4">Зареждане…</li>';
+
+  try {
+    const stats = await fetchDriversDayStats(dateKey);
+
+    if (!stats.length) {
+      list.innerHTML = '<li class="text-center text-slate-400 text-sm py-4">Няма данни</li>';
+      return;
+    }
+
+    list.innerHTML = stats.map(s => {
+      const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+      const complete = s.total > 0 && s.done === s.total;
+
+      return `
+        <li class="rounded-xl border border-navy/10 p-3 ${complete ? 'bg-success-light/40' : 'bg-cream/40'}">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="font-semibold text-navy truncate">${escapeHtml(s.displayName)}</p>
+              <p class="text-xs text-slate-500">@${escapeHtml(s.username)}${s.role === 'admin' ? ' · Админ' : ''}</p>
+            </div>
+            <span class="text-xs font-bold shrink-0 ${complete ? 'text-success-dark' : 'text-navy'}">${s.done}/${s.total}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2 text-xs">
+            <span class="px-2 py-1 rounded-lg bg-white border border-navy/10">${pct}% готови</span>
+            ${s.cashCount ? `<span class="px-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900">💵 ${formatEUR(s.cashAmount)} (${s.cashCount})</span>` : ''}
+            ${!s.total ? '<span class="px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-500">Няма спирки</span>' : ''}
+          </div>
+        </li>`;
+    }).join('');
+  } catch (err) {
+    list.innerHTML = `<li class="text-center text-red-500 text-sm py-4">${escapeHtml(err.message || 'Грешка')}</li>`;
+  }
+}
+
+async function handleCopyAppLink() {
+  try {
+    await copyTextToClipboard(APP_URL);
+    showAdminSuccess('Линкът е копиран.');
+  } catch {
+    showAdminError('Неуспешно копиране.');
+  }
 }
 
 async function renderUserList() {

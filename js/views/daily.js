@@ -18,11 +18,16 @@ import {
   getRegionFromSelect
 } from '../regions.js';
 import { formatWaybillText, copyTextToClipboard } from '../waybill.js';
+import { collectClientNames, hasClientOnDay } from '../client-history.js';
+import { moveDeliveryInRegion, reorderDeliveryBefore } from '../reorder.js';
 
 const COURSE_DATE_KEY = 'rojen1_course_date';
 
 /** @type {boolean} */
 let addPaymentIsCash = false;
+
+/** @type {string | null} */
+let dragDeliveryId = null;
 
 /** @type {import('../app.js').DailyViewCallbacks} */
 let callbacks = {};
@@ -36,6 +41,11 @@ export function initDailyView(cb) {
   document.getElementById('form-add-delivery')?.addEventListener('submit', handleAddDelivery);
   document.getElementById('delivery-list')?.addEventListener('change', handleToggle);
   document.getElementById('delivery-list')?.addEventListener('click', handleCardClick);
+  document.getElementById('delivery-list')?.addEventListener('dragstart', handleDragStart);
+  document.getElementById('delivery-list')?.addEventListener('dragover', handleDragOver);
+  document.getElementById('delivery-list')?.addEventListener('drop', handleDrop);
+  document.getElementById('delivery-list')?.addEventListener('dragend', handleDragEnd);
+  document.getElementById('input-client')?.addEventListener('input', refreshClientSuggestions);
   document.getElementById('btn-copy-waybill')?.addEventListener('click', handleCopyWaybill);
   document.getElementById('btn-course-today')?.addEventListener('click', () => selectCourseDate(todayKey()));
   document.getElementById('btn-course-tomorrow')?.addEventListener('click', () => selectCourseDate(tomorrowKey()));
@@ -56,6 +66,7 @@ export function renderDailyView() {
   renderDeliveryList(groups);
   updateSummaryBar(summary);
   updateCashSummaryBar(day.deliveries);
+  refreshClientSuggestions();
   updateWaybillButton(day.deliveries.length);
   updateSyncInfo(dateKey, day.deliveries.length);
   callbacks.onDateUpdate?.(dateKey);
@@ -289,20 +300,41 @@ function setAddPaymentType(isCash) {
   document.getElementById('btn-pay-cash')?.setAttribute('aria-pressed', String(isCash));
 }
 
+function refreshClientSuggestions() {
+  const datalist = document.getElementById('client-suggestions');
+  const input = document.getElementById('input-client');
+  if (!datalist) return;
+
+  const query = input?.value || '';
+  const names = collectClientNames(loadData().days, query);
+
+  datalist.innerHTML = names
+    .map(name => `<option value="${String(name).replace(/"/g, '&quot;')}"></option>`)
+    .join('');
+}
+
 /** @param {import('../storage.js').Delivery} d */
 function renderDeliveryCard(d) {
   const isCash = !!d.isCash;
 
   return `
     <article class="delivery-card ${d.delivered ? 'delivered' : 'bg-white'} rounded-2xl shadow-card p-4 border border-navy/5 transition-all duration-300"
-      data-id="${d.id}">
+      data-id="${d.id}" draggable="true">
       <div class="flex items-center gap-2">
+        <div class="delivery-drag-handle shrink-0 text-slate-300" aria-hidden="true" title="Плъзни за подредба">⋮⋮</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 min-w-0">
             <h3 class="delivery-name font-semibold text-navy truncate">${escapeHtml(d.clientName)}</h3>
             ${isCash ? '<span class="cash-badge shrink-0">Брой</span>' : ''}
           </div>
           <p class="delivery-amount text-lg font-bold mt-0.5 ${d.delivered ? '' : 'text-accent-coral'}">${formatEUR(d.amount)}</p>
+          ${d.note ? `<p class="text-xs text-slate-500 mt-1 line-clamp-2">📝 ${escapeHtml(d.note)}</p>` : ''}
+        </div>
+        <div class="flex flex-col gap-1 shrink-0">
+          <button type="button" data-action="move-up" data-id="${d.id}" aria-label="Нагоре"
+            class="reorder-btn">↑</button>
+          <button type="button" data-action="move-down" data-id="${d.id}" aria-label="Надолу"
+            class="reorder-btn">↓</button>
         </div>
         <button type="button" data-action="delete" data-id="${d.id}" aria-label="Изтрий спирка"
           class="btn-delete-delivery shrink-0">
@@ -321,6 +353,8 @@ function renderDeliveryCard(d) {
           class="payment-chip ${!isCash ? 'payment-chip--active' : ''}">Банка</button>
         <button type="button" data-action="set-payment" data-id="${d.id}" data-cash="true"
           class="payment-chip ${isCash ? 'payment-chip--active payment-chip--cash' : ''}">💵 Брой</button>
+        <button type="button" data-action="edit-note" data-id="${d.id}"
+          class="payment-chip">${d.note ? '✏️ Бележка' : '📝 Бележка'}</button>
       </div>
       ${d.delivered ? `
         <div class="mt-2 flex items-center gap-1.5 text-success-dark text-xs font-medium">
@@ -380,10 +414,12 @@ async function handleAddDelivery(e) {
 
   const clientInput = document.getElementById('input-client');
   const amountInput = document.getElementById('input-amount');
+  const noteInput = document.getElementById('input-note');
   const region = getSelectedRegion();
 
   const clientName = clientInput.value.trim();
   const amount = parseFloat(amountInput.value);
+  const note = noteInput?.value.trim() || '';
 
   if (!region) {
     showToast('Изберете район.');
@@ -394,6 +430,10 @@ async function handleAddDelivery(e) {
   const dateKey = getCourseDateKey();
   const day = getDay(dateKey);
 
+  if (hasClientOnDay(day.deliveries, clientName)) {
+    if (!confirm(`„${clientName}“ вече е в списъка за този ден. Добави пак?`)) return;
+  }
+
   day.deliveries.push({
     id: generateId(),
     clientName,
@@ -401,6 +441,7 @@ async function handleAddDelivery(e) {
     region,
     delivered: false,
     isCash: addPaymentIsCash,
+    note: note || undefined,
     createdAt: new Date().toISOString()
   });
 
@@ -409,6 +450,7 @@ async function handleAddDelivery(e) {
     sessionStorage.setItem(LAST_REGION_KEY, region);
     clientInput.value = '';
     amountInput.value = '';
+    if (noteInput) noteInput.value = '';
     clientInput.focus();
     callbacks.onDeliveryAdded?.();
     renderDailyView();
@@ -480,6 +522,12 @@ async function handleCardClick(e) {
 
   if (action === 'set-payment') {
     delivery.isCash = btn.dataset.cash === 'true';
+  } else if (action === 'move-up' || action === 'move-down') {
+    day.deliveries = moveDeliveryInRegion(day.deliveries, id, action === 'move-up' ? 'up' : 'down');
+  } else if (action === 'edit-note') {
+    const next = prompt('Бележка за спирката:', delivery.note || '');
+    if (next === null) return;
+    delivery.note = next.trim() || undefined;
   } else {
     return;
   }
@@ -490,6 +538,46 @@ async function handleCardClick(e) {
   } catch (err) {
     showToast(err.message || 'Грешка при запис.');
   }
+}
+
+function handleDragStart(e) {
+  const card = e.target.closest('.delivery-card');
+  if (!card) return;
+  dragDeliveryId = card.dataset.id || null;
+  card.classList.add('delivery-card--dragging');
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragDeliveryId || '');
+  }
+}
+
+function handleDragOver(e) {
+  if (!dragDeliveryId) return;
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+}
+
+async function handleDrop(e) {
+  e.preventDefault();
+  const targetCard = e.target.closest('.delivery-card');
+  const targetId = targetCard?.dataset.id;
+  if (!dragDeliveryId || !targetId || dragDeliveryId === targetId) return;
+
+  const dateKey = getCourseDateKey();
+  const day = getDay(dateKey);
+  day.deliveries = reorderDeliveryBefore(day.deliveries, dragDeliveryId, targetId);
+
+  try {
+    await saveDay(dateKey, day);
+    renderDailyView();
+  } catch (err) {
+    showToast(err.message || 'Грешка при подредба.');
+  }
+}
+
+function handleDragEnd(e) {
+  e.target.closest('.delivery-card')?.classList.remove('delivery-card--dragging');
+  dragDeliveryId = null;
 }
 
 /** @param {string} id */

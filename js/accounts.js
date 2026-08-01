@@ -104,6 +104,45 @@ export async function listAllAccounts() {
 }
 
 /**
+ * Admin: stats for each active account on a given day.
+ * @param {string} dateKey
+ */
+export async function fetchDriversDayStats(dateKey) {
+  await ensureBootstrapAdmin();
+  const snap = await get(ref(getFirebaseDb(), 'accounts'));
+  if (!snap.exists()) return [];
+
+  const accounts = snap.val();
+
+  return Object.entries(accounts)
+    .map(([username, raw]) => {
+      const profile = accountProfile(username, /** @type {Record<string, unknown>} */ (raw));
+      if (profile.disabled) return null;
+
+      const account = /** @type {{ days?: Record<string, { deliveries?: Array<{ delivered?: boolean, isCash?: boolean, amount?: number }> }> }} */ (raw);
+      const deliveries = account.days?.[dateKey]?.deliveries || [];
+      const delivered = deliveries.filter(d => d.delivered);
+      const cashDelivered = delivered.filter(d => d.isCash);
+
+      return {
+        username: profile.username,
+        displayName: profile.displayName || profile.username,
+        role: profile.role,
+        total: deliveries.length,
+        done: delivered.length,
+        cashCount: cashDelivered.length,
+        cashAmount: cashDelivered.reduce((sum, d) => sum + (d.amount || 0), 0)
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (a.username === ADMIN_USERNAME) return -1;
+      if (b.username === ADMIN_USERNAME) return 1;
+      return a.displayName.localeCompare(b.displayName, 'bg');
+    });
+}
+
+/**
  * @param {string} username
  * @param {string} password
  * @returns {Promise<{ username: string, displayName: string, role: UserRole }>}

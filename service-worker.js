@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rojen1-v28';
+const CACHE_NAME = 'rojen1-v29';
 const ASSETS = [
   './',
   './index.html',
@@ -17,6 +17,9 @@ const ASSETS = [
   './js/firebase-config.js',
   './js/storage.js',
   './js/calculations.js',
+  './js/client-history.js',
+  './js/reorder.js',
+  './js/export.js',
   './js/views/daily.js',
   './js/views/archive.js',
   './js/views/settings.js',

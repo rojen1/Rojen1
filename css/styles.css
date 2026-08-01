@@ -701,3 +701,33 @@ body {
 [data-theme="dark"] #cash-summary-block .text-amber-800 {
   color: #fcd34d !important;
 }
+
+.reorder-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.delivery-drag-handle {
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+}
+
+.delivery-card--dragging {
+  opacity: 0.55;
+  transform: scale(0.98);
+}
+
+[data-theme="dark"] .reorder-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}

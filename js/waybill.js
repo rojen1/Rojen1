@@ -36,8 +36,9 @@ export function formatWaybillText(deliveries, { dateKey, driverName = '' }) {
 
     group.deliveries.forEach((delivery, index) => {
       const cashLabel = delivery.isCash ? ' · брой' : '';
+      const noteLabel = delivery.note ? `\n   📝 ${delivery.note}` : '';
       lines.push(`${index + 1}. ${delivery.clientName}${cashLabel}`);
-      lines.push(`   ${formatEUR(delivery.amount)}`);
+      lines.push(`   ${formatEUR(delivery.amount)}${noteLabel}`);
       lines.push('');
     });
   }

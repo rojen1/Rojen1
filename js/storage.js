@@ -17,7 +17,7 @@ export const DEFAULT_SETTINGS = {
   monthlyVoucher: 100
 };
 
-/** @typedef {{ id: string, clientName: string, amount: number, delivered: boolean, createdAt: string, region?: string, isCash?: boolean, cashReported?: boolean }} Delivery */
+/** @typedef {{ id: string, clientName: string, amount: number, delivered: boolean, createdAt: string, region?: string, isCash?: boolean, cashReported?: boolean, note?: string }} Delivery */
 /** @typedef {{ deliveries: Delivery[], updatedAt: string }} DayRecord */
 /** @typedef {{ bonusPercent: number, dailyAllowance: number, monthlyVoucher: number }} Settings */
 /** @typedef {{ role: 'admin' | 'driver', username: string, displayName?: string, disabled?: boolean }} UserProfile */

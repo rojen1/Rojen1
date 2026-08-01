@@ -197,7 +197,13 @@
             </div>
             <div>
               <label for="input-client" class="block text-xs font-medium text-slate-500 mb-1">Клиент / Фирма</label>
-              <input type="text" id="input-client" required placeholder="Име на клиента"
+              <input type="text" id="input-client" list="client-suggestions" required placeholder="Име на клиента" autocomplete="off"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 focus:border-navy/40 text-sm">
+              <datalist id="client-suggestions"></datalist>
+            </div>
+            <div>
+              <label for="input-note" class="block text-xs font-medium text-slate-500 mb-1">Бележка <span class="text-slate-400">(по избор)</span></label>
+              <input type="text" id="input-note" placeholder="напр. обади се преди, върнати стоки"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 focus:border-navy/40 text-sm">
             </div>
             <div>
@@ -305,6 +311,11 @@
 
         <p class="text-xs text-slate-500 mb-3 px-1">Докоснете ред за детайли по доставките</p>
 
+        <button type="button" id="btn-export-month"
+          class="w-full mb-4 py-2.5 rounded-xl border border-navy/15 bg-white text-navy font-semibold text-sm shadow-sm hover:bg-cream active:scale-[0.98] transition-all">
+          ⬇ Експорт на месеца (Excel CSV)
+        </button>
+
         <div class="bg-white rounded-2xl shadow-card overflow-hidden border border-navy/5">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
@@ -333,6 +344,29 @@
       <!-- Admin Panel (admin only) -->
       <section id="view-admin" class="view-panel hidden px-4 pt-4 pb-safe space-y-4" aria-label="Админ панел">
         <div id="admin-feedback" class="hidden"></div>
+
+        <div class="bg-white rounded-2xl shadow-card p-4 border border-navy/5">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <h2 class="text-sm font-bold text-navy">Днес — всички шофьори</h2>
+            <button type="button" id="btn-refresh-fleet"
+              class="text-xs text-navy font-medium px-2 py-1 rounded-lg bg-cream border border-navy/10">
+              Обнови
+            </button>
+          </div>
+          <p id="admin-fleet-date" class="text-xs text-slate-500 mb-3"></p>
+          <ul id="admin-fleet-list" class="space-y-2"></ul>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-card p-4 border border-navy/5 text-center">
+          <h2 class="text-sm font-bold text-navy mb-3">Сподели приложението</h2>
+          <img id="admin-qr-code" width="180" height="180" alt="QR код към приложението"
+            class="mx-auto rounded-xl border border-navy/10 bg-white">
+          <p class="text-xs text-slate-500 mt-3 break-all">https://rojen1.github.io/Rojen1/</p>
+          <button type="button" id="btn-copy-app-link"
+            class="mt-3 w-full py-2.5 rounded-xl bg-navy/10 text-navy font-semibold text-sm">
+            Копирай линка
+          </button>
+        </div>
 
         <div class="bg-white rounded-2xl shadow-card p-4 border border-navy/5">
           <h2 class="text-sm font-bold text-navy mb-3">Създай потребител</h2>
