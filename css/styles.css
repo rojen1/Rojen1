@@ -732,6 +732,30 @@ body {
   color: #94a3b8;
 }
 
+.cash-calc-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+  padding-left: 0.125rem;
+}
+
+.cash-calc-section + .cash-calc-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+[data-theme="dark"] .cash-calc-section + .cash-calc-section {
+  border-top-color: #334155;
+}
+
+[data-theme="dark"] .cash-calc-section-title {
+  color: #94a3b8;
+}
+
 .cash-calc-row {
   display: grid;
   grid-template-columns: 4.5rem 1fr 5.5rem;

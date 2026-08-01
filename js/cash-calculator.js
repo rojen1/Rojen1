@@ -2,11 +2,52 @@ import { formatEUR } from './calculations.js';
 
 const STORAGE_KEY = 'rojen1_cash_calc';
 
-/** Euro banknotes for the cash counter. */
-export const CASH_DENOMINATIONS = [500, 200, 100, 50, 20, 10, 5];
+/** @typedef {{ value: number, label: string }} CashDenomination */
+
+/** @type {{ title: string, items: CashDenomination[] }[]} */
+export const CASH_SECTIONS = [
+  {
+    title: 'Банкnotes',
+    items: [
+      { value: 500, label: '500 €' },
+      { value: 200, label: '200 €' },
+      { value: 100, label: '100 €' },
+      { value: 50, label: '50 €' },
+      { value: 20, label: '20 €' },
+      { value: 10, label: '10 €' },
+      { value: 5, label: '5 €' }
+    ]
+  },
+  {
+    title: 'Монети',
+    items: [
+      { value: 2, label: '2 €' },
+      { value: 1, label: '1 €' },
+      { value: 0.5, label: '50 ст' },
+      { value: 0.2, label: '20 ст' },
+      { value: 0.1, label: '10 ст' },
+      { value: 0.05, label: '5 ст' },
+      { value: 0.02, label: '2 ст' },
+      { value: 0.01, label: '1 ст' }
+    ]
+  }
+];
+
+/** @type {CashDenomination[]} */
+const ALL_DENOMINATIONS = CASH_SECTIONS.flatMap(section => section.items);
 
 /** @type {(() => number) | null} */
 let getExpectedCash = null;
+
+/** @param {number} value */
+function denomKey(value) {
+  return String(value);
+}
+
+/** @param {number} value */
+function inputId(value) {
+  return `cash-count-${String(value).replace('.', '_')}`;
+}
 
 /** @returns {Record<string, number>} */
 function loadCounts() {
@@ -26,9 +67,9 @@ function saveCounts(counts) {
 
 /** @param {Record<string, number>} counts */
 function calcTotal(counts) {
-  return CASH_DENOMINATIONS.reduce((sum, value) => {
-    const count = Number(counts[String(value)] || 0);
-    return sum + value * count;
+  return ALL_DENOMINATIONS.reduce((sum, item) => {
+    const count = Number(counts[denomKey(item.value)] || 0);
+    return sum + item.value * count;
   }, 0);
 }
 
@@ -38,19 +79,28 @@ function renderRows() {
 
   const counts = loadCounts();
 
-  container.innerHTML = CASH_DENOMINATIONS.map(value => {
-    const count = Number(counts[String(value)] || 0);
-    const subtotal = value * count;
+  container.innerHTML = CASH_SECTIONS.map(section => `
+    <div class="cash-calc-section">
+      <p class="cash-calc-section-title">${section.title}</p>
+      <div class="space-y-2">
+        ${section.items.map(item => {
+          const key = denomKey(item.value);
+          const count = Number(counts[key] || 0);
+          const subtotal = item.value * count;
+          const id = inputId(item.value);
 
-    return `
-      <div class="cash-calc-row">
-        <label class="cash-calc-label" for="cash-count-${value}">${value} €</label>
-        <input type="number" id="cash-count-${value}" data-denom="${value}" min="0" step="1" inputmode="numeric"
-          value="${count || ''}" placeholder="0"
-          class="cash-calc-input">
-        <span class="cash-calc-subtotal" data-subtotal="${value}">${formatEUR(subtotal)}</span>
-      </div>`;
-  }).join('');
+          return `
+            <div class="cash-calc-row">
+              <label class="cash-calc-label" for="${id}">${item.label}</label>
+              <input type="number" id="${id}" data-denom="${key}" min="0" step="1" inputmode="numeric"
+                value="${count || ''}" placeholder="0"
+                class="cash-calc-input">
+              <span class="cash-calc-subtotal" data-subtotal="${key}">${formatEUR(subtotal)}</span>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
 }
 
 function updateTotals() {
@@ -58,17 +108,18 @@ function updateTotals() {
   const counts = {};
   let total = 0;
 
-  for (const value of CASH_DENOMINATIONS) {
-    const input = document.getElementById(`cash-count-${value}`);
-    const subtotalEl = document.querySelector(`[data-subtotal="${value}"]`);
+  for (const item of ALL_DENOMINATIONS) {
+    const key = denomKey(item.value);
+    const input = document.getElementById(inputId(item.value));
+    const subtotalEl = document.querySelector(`[data-subtotal="${key}"]`);
     const count = Math.max(0, parseInt(input?.value || '0', 10) || 0);
 
     if (input && String(input.value) !== String(count)) {
       input.value = count ? String(count) : '';
     }
 
-    counts[String(value)] = count;
-    const subtotal = value * count;
+    counts[key] = count;
+    const subtotal = item.value * count;
     total += subtotal;
     if (subtotalEl) subtotalEl.textContent = formatEUR(subtotal);
   }
