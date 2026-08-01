@@ -11,6 +11,7 @@ import {
 } from '../calculations.js';
 import {
   LAST_REGION_KEY,
+  OTHER_REGION_VALUE,
   groupDeliveriesByRegion,
   isAllRegionsComplete,
   fillRegionSelect,
@@ -39,10 +40,12 @@ export function initDailyView(cb) {
   callbacks = cb;
 
   populateRegionSelect();
-  renderRegionManageList();
+  updateRegionPickerLabel();
   onDataChange(refreshRegionUi);
-  document.getElementById('input-region')?.addEventListener('change', handleRegionSelectChange);
-  document.getElementById('region-list')?.addEventListener('click', handleRegionListClick);
+  document.getElementById('region-picker-trigger')?.addEventListener('click', handleRegionPickerToggle);
+  document.getElementById('region-picker-list')?.addEventListener('click', handleRegionPickerListClick);
+  document.getElementById('input-region-other')?.addEventListener('input', updateRegionPickerLabel);
+  document.addEventListener('click', handleRegionPickerOutsideClick);
   document.getElementById('form-add-delivery')?.addEventListener('submit', handleAddDelivery);
   document.getElementById('delivery-list')?.addEventListener('change', handleToggle);
   document.getElementById('delivery-list')?.addEventListener('click', handleCardClick);
@@ -204,7 +207,8 @@ function updateWaybillButton(deliveryCount) {
 
 function refreshRegionUi() {
   populateRegionSelect();
-  renderRegionManageList();
+  renderRegionPickerMenu();
+  updateRegionPickerLabel();
 }
 
 function populateRegionSelect() {
@@ -215,19 +219,46 @@ function populateRegionSelect() {
   );
 }
 
-function renderRegionManageList() {
-  const list = document.getElementById('region-list');
-  if (!list) return;
+function updateRegionPickerLabel() {
+  const select = document.getElementById('input-region');
+  const otherInput = document.getElementById('input-region-other');
+  const labelEl = document.getElementById('region-picker-label');
+  if (!select || !labelEl) return;
 
-  const regions = getSavedRegions();
-  if (!regions.length) {
-    list.innerHTML = '<li class="text-xs text-slate-400 px-1">Няма запазени райони. Изберете „Добави нов…“.</li>';
+  if (select.value === OTHER_REGION_VALUE) {
+    const custom = otherInput?.value.trim();
+    labelEl.textContent = custom || 'Добави нов район…';
+    labelEl.classList.toggle('text-navy', !!custom);
+    labelEl.classList.toggle('text-slate-600', !custom);
     return;
   }
 
-  list.innerHTML = regions.map(region => `
-    <li class="region-manage-row">
-      <span class="region-manage-name">${escapeHtml(region)}</span>
+  if (select.value) {
+    labelEl.textContent = select.value;
+    labelEl.classList.add('text-navy');
+    labelEl.classList.remove('text-slate-600');
+    return;
+  }
+
+  labelEl.textContent = '— Изберете район —';
+  labelEl.classList.remove('text-navy');
+  labelEl.classList.add('text-slate-600');
+}
+
+function renderRegionPickerMenu() {
+  const list = document.getElementById('region-picker-list');
+  const select = document.getElementById('input-region');
+  if (!list || !select) return;
+
+  const regions = getSavedRegions();
+  const selected = select.value === OTHER_REGION_VALUE ? '' : select.value;
+
+  const rows = regions.map(region => `
+    <li class="region-picker-item">
+      <button type="button" class="region-picker-select-btn ${region === selected ? 'region-picker-select-btn--active' : ''}"
+        data-action="pick-region" data-region="${escapeHtml(region)}">
+        ${escapeHtml(region)}
+      </button>
       <button type="button" class="region-delete-btn" data-action="delete-region" data-region="${escapeHtml(region)}"
         aria-label="Премахни ${escapeHtml(region)}">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -237,13 +268,91 @@ function renderRegionManageList() {
       </button>
     </li>
   `).join('');
+
+  list.innerHTML = rows + `
+    <li class="region-picker-item">
+      <button type="button" class="region-picker-add-btn" data-action="add-region">
+        + Добави нов район
+      </button>
+    </li>
+  `;
 }
 
-async function handleRegionListClick(e) {
-  const btn = e.target.closest('[data-action="delete-region"]');
-  if (!btn) return;
+function setRegionPickerOpen(open) {
+  const menu = document.getElementById('region-picker-menu');
+  const trigger = document.getElementById('region-picker-trigger');
+  if (!menu || !trigger) return;
 
-  const region = btn.dataset.region;
+  menu.classList.toggle('hidden', !open);
+  trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+  if (open) {
+    renderRegionPickerMenu();
+  }
+}
+
+function handleRegionPickerToggle(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('region-picker-menu');
+  const isOpen = menu && !menu.classList.contains('hidden');
+  setRegionPickerOpen(!isOpen);
+}
+
+function handleRegionPickerOutsideClick(e) {
+  const wrap = document.querySelector('.region-picker-wrap');
+  if (!wrap || wrap.contains(/** @type {Node} */ (e.target))) return;
+  setRegionPickerOpen(false);
+}
+
+function selectRegionValue(region) {
+  const select = document.getElementById('input-region');
+  const otherInput = document.getElementById('input-region-other');
+  if (!select) return;
+
+  select.value = region;
+  if (otherInput) otherInput.value = '';
+  syncRegionOtherVisibility(select, otherInput);
+  updateRegionPickerLabel();
+  setRegionPickerOpen(false);
+}
+
+function startAddRegionFlow() {
+  const select = document.getElementById('input-region');
+  const otherInput = document.getElementById('input-region-other');
+  if (!select) return;
+
+  select.value = OTHER_REGION_VALUE;
+  syncRegionOtherVisibility(select, otherInput);
+  updateRegionPickerLabel();
+  setRegionPickerOpen(false);
+  otherInput?.focus();
+}
+
+async function handleRegionPickerListClick(e) {
+  const target = /** @type {HTMLElement} */ (e.target);
+  const pickBtn = target.closest('[data-action="pick-region"]');
+  const deleteBtn = target.closest('[data-action="delete-region"]');
+  const addBtn = target.closest('[data-action="add-region"]');
+
+  if (pickBtn) {
+    e.preventDefault();
+    const region = pickBtn.getAttribute('data-region');
+    if (region) selectRegionValue(region);
+    return;
+  }
+
+  if (addBtn) {
+    e.preventDefault();
+    startAddRegionFlow();
+    return;
+  }
+
+  if (!deleteBtn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const region = deleteBtn.getAttribute('data-region');
   if (!region) return;
 
   if (!confirm(`Премахни „${region}“ от списъка?`)) return;
@@ -253,19 +362,13 @@ async function handleRegionListClick(e) {
     const select = document.getElementById('input-region');
     if (select?.value === region) {
       select.value = '';
+      syncRegionOtherVisibility(select, document.getElementById('input-region-other'));
     }
     refreshRegionUi();
     showToast('Районът е премахнат');
   } catch (err) {
     showToast(err.message || 'Грешка при запис.');
   }
-}
-
-function handleRegionSelectChange() {
-  syncRegionOtherVisibility(
-    document.getElementById('input-region'),
-    document.getElementById('input-region-other')
-  );
 }
 
 /** @param {import('../regions.js').RegionGroup[]} groups */
@@ -519,12 +622,7 @@ async function handleAddDelivery(e) {
     amountInput.value = '';
     if (noteInput) noteInput.value = '';
     refreshRegionUi();
-    const select = document.getElementById('input-region');
-    if (select) select.value = region;
-    syncRegionOtherVisibility(
-      select,
-      document.getElementById('input-region-other')
-    );
+    selectRegionValue(region);
     clientInput.focus();
     callbacks.onDeliveryAdded?.();
     renderDailyView();

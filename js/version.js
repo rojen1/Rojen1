@@ -1,5 +1,5 @@
 /** Bump when publishing updates — shown bottom-right in the app. */
-export const APP_VERSION = '1.39';
+export const APP_VERSION = '1.40';
 
 export const APP_VERSION_LABEL = `v${APP_VERSION}`;
 

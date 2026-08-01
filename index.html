@@ -186,18 +186,23 @@
             Нова доставка
           </h2>
           <form id="form-add-delivery" class="space-y-3">
-            <div>
-              <label for="input-region" class="block text-xs font-medium text-slate-500 mb-1">Район</label>
-              <select id="input-region" required
-                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 focus:border-navy/40 text-sm">
+            <div class="region-picker-wrap">
+              <label for="region-picker-trigger" class="block text-xs font-medium text-slate-500 mb-1">Район</label>
+              <select id="input-region" class="hidden" required tabindex="-1" aria-hidden="true">
                 <option value="">— Изберете район —</option>
               </select>
+              <button type="button" id="region-picker-trigger" aria-haspopup="listbox" aria-expanded="false"
+                class="region-picker-trigger w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 focus:border-navy/40 text-sm text-left flex items-center justify-between gap-2">
+                <span id="region-picker-label" class="truncate text-slate-600">— Изберете район —</span>
+                <svg class="w-4 h-4 shrink-0 text-slate-400 region-picker-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div id="region-picker-menu" class="region-picker-menu hidden" role="listbox" aria-label="Избор на район">
+                <ul id="region-picker-list" class="region-picker-list"></ul>
+              </div>
               <input type="text" id="input-region-other" placeholder="Име на нов район"
                 class="hidden w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 focus:border-navy/40 text-sm">
-              <div id="region-manage" class="mt-2">
-                <p class="text-xs font-medium text-slate-500 mb-1">Моите райони</p>
-                <ul id="region-list" class="region-manage-list" aria-label="Списък с райони"></ul>
-              </div>
             </div>
             <div>
               <label for="input-client" class="block text-xs font-medium text-slate-500 mb-1">Клиент / Фирма</label>
