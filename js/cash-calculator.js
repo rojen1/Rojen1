@@ -65,12 +65,18 @@ function saveCounts(counts) {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(counts));
 }
 
+/** @param {number} amount */
+function roundCents(amount) {
+  return Math.round(amount * 100);
+}
+
 /** @param {Record<string, number>} counts */
 function calcTotal(counts) {
-  return ALL_DENOMINATIONS.reduce((sum, item) => {
+  const totalCents = ALL_DENOMINATIONS.reduce((sum, item) => {
     const count = Number(counts[denomKey(item.value)] || 0);
-    return sum + item.value * count;
+    return sum + roundCents(item.value) * count;
   }, 0);
+  return totalCents / 100;
 }
 
 function renderRows() {
@@ -86,7 +92,7 @@ function renderRows() {
         ${section.items.map(item => {
           const key = denomKey(item.value);
           const count = Number(counts[key] || 0);
-          const subtotal = item.value * count;
+          const subtotalCents = roundCents(item.value) * count;
           const id = inputId(item.value);
 
           return `
@@ -95,7 +101,7 @@ function renderRows() {
               <input type="number" id="${id}" data-denom="${key}" min="0" step="1" inputmode="numeric"
                 value="${count || ''}" placeholder="0"
                 class="cash-calc-input">
-              <span class="cash-calc-subtotal" data-subtotal="${key}">${formatEUR(subtotal)}</span>
+              <span class="cash-calc-subtotal" data-subtotal="${key}">${formatEUR(subtotalCents / 100)}</span>
             </div>`;
         }).join('')}
       </div>
@@ -119,15 +125,16 @@ function updateTotals() {
     }
 
     counts[key] = count;
-    const subtotal = item.value * count;
-    total += subtotal;
-    if (subtotalEl) subtotalEl.textContent = formatEUR(subtotal);
+    const subtotalCents = roundCents(item.value) * count;
+    total += subtotalCents;
+    if (subtotalEl) subtotalEl.textContent = formatEUR(subtotalCents / 100);
   }
 
   saveCounts(counts);
 
+  const totalEUR = total / 100;
   const totalEl = document.getElementById('cash-calc-total');
-  if (totalEl) totalEl.textContent = formatEUR(total);
+  if (totalEl) totalEl.textContent = formatEUR(totalEUR);
 
   const expected = getExpectedCash?.() ?? 0;
   const compareEl = document.getElementById('cash-calc-compare');
@@ -139,18 +146,18 @@ function updateTotals() {
     return;
   }
 
-  const diff = total - expected;
+  const diffCents = total - roundCents(expected);
   compareEl.classList.remove('hidden');
 
-  if (Math.abs(diff) < 0.01) {
+  if (diffCents === 0) {
     compareEl.className = 'cash-calc-compare cash-calc-compare--ok';
     compareEl.textContent = `✓ Съвпада с „За отчитане“ (${formatEUR(expected)})`;
-  } else if (diff > 0) {
+  } else if (diffCents > 0) {
     compareEl.className = 'cash-calc-compare cash-calc-compare--over';
-    compareEl.textContent = `▲ +${formatEUR(diff)} над „За отчитане“ (${formatEUR(expected)})`;
+    compareEl.textContent = `▲ +${formatEUR(diffCents / 100)} над „За отчитане“ (${formatEUR(expected)})`;
   } else {
     compareEl.className = 'cash-calc-compare cash-calc-compare--under';
-    compareEl.textContent = `▼ ${formatEUR(Math.abs(diff))} под „За отчитане“ (${formatEUR(expected)})`;
+    compareEl.textContent = `▼ ${formatEUR(Math.abs(diffCents) / 100)} под „За отчитане“ (${formatEUR(expected)})`;
   }
 }
 

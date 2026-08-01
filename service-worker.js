@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rojen1-v36';
+const CACHE_NAME = 'rojen1-v37';
 const ASSETS = [
   './',
   './index.html',
