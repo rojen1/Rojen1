@@ -1,4 +1,4 @@
-import { loadData, updateSettings, clearAllData, DEFAULT_SETTINGS } from '../storage.js';
+import { loadData, updateSettings, DEFAULT_SETTINGS } from '../storage.js';
 import { handleLogout } from '../auth.js';
 import { setTheme, updateThemeButtonStates } from '../theme.js';
 
@@ -14,7 +14,6 @@ export function initSettingsView({ onSaved }) {
   document.getElementById('modal-backdrop')?.addEventListener('click', closeModal);
 
   document.getElementById('form-settings')?.addEventListener('submit', handleSave);
-  document.getElementById('btn-reset-data')?.addEventListener('click', handleReset);
   document.getElementById('btn-logout-settings')?.addEventListener('click', () => {
     closeModal();
     handleLogout();
@@ -56,19 +55,6 @@ async function handleSave(e) {
     showToast('Настройките са запазени');
   } catch (err) {
     showToast(err.message || 'Грешка при запис.');
-  }
-}
-
-async function handleReset() {
-  if (!confirm('Сигурни ли сте? Всички данни ще бъдат изтрити безвъзвратно.')) return;
-
-  try {
-    await clearAllData();
-    closeModal();
-    onSettingsSaved();
-    showToast('Данните са изчистени');
-  } catch (err) {
-    showToast(err.message || 'Грешка при изтриване.');
   }
 }
 
