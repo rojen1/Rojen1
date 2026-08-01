@@ -472,12 +472,22 @@ function refreshClientSuggestions() {
   const input = document.getElementById('input-client');
   if (!datalist) return;
 
-  const query = input?.value || '';
+  const query = input?.value.trim() || '';
+  if (!query) {
+    datalist.innerHTML = '';
+    return;
+  }
+
   const names = collectClientNames(loadData().days, query);
 
   datalist.innerHTML = names
     .map(name => `<option value="${String(name).replace(/"/g, '&quot;')}"></option>`)
     .join('');
+}
+
+function clearClientSuggestions() {
+  const datalist = document.getElementById('client-suggestions');
+  if (datalist) datalist.innerHTML = '';
 }
 
 /** @param {import('../storage.js').Delivery} d */
@@ -621,6 +631,7 @@ async function handleAddDelivery(e) {
     clientInput.value = '';
     amountInput.value = '';
     if (noteInput) noteInput.value = '';
+    clearClientSuggestions();
     refreshRegionUi();
     selectRegionValue(region);
     clientInput.focus();
