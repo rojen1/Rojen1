@@ -179,6 +179,31 @@ export function formatShortDate(dateKey) {
   }).format(date);
 }
 
+/** @param {string} iso */
+export function formatTime(iso) {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('bg-BG', {
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
+/** @param {string} iso */
+export function formatDateTime(iso) {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('bg-BG', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
 export function generateId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }

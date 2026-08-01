@@ -436,6 +436,29 @@
     </div>
   </div>
 
+  <!-- Admin driver day detail -->
+  <div id="modal-admin-driver" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="admin-driver-title">
+    <div id="admin-driver-backdrop" class="absolute inset-0 bg-navy/60 backdrop-blur-sm"></div>
+    <div class="absolute inset-x-0 bottom-0 max-w-lg mx-auto animate-slide-up">
+      <div class="bg-white rounded-t-3xl shadow-2xl p-6 pb-safe max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-1">
+          <h2 id="admin-driver-title" class="text-lg font-bold text-navy">Шофьор</h2>
+          <button id="btn-close-admin-driver" type="button" aria-label="Затвори"
+            class="w-9 h-9 rounded-xl bg-cream hover:bg-cream-dark flex items-center justify-center text-slate-500 active:scale-95 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <p id="admin-driver-subtitle" class="text-sm text-slate-500 mb-3"></p>
+        <div id="admin-driver-summary" class="grid grid-cols-2 gap-2 mb-4"></div>
+        <p id="admin-driver-meta" class="text-xs text-slate-500 mb-4"></p>
+        <h3 class="text-sm font-bold text-navy mb-2">Спирки за деня</h3>
+        <ul id="admin-driver-stops" class="space-y-3"></ul>
+      </div>
+    </div>
+  </div>
+
   <!-- Reset Password Modal (admin) -->
   <div id="modal-reset-password" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
     <div id="reset-backdrop" class="absolute inset-0 bg-navy/60 backdrop-blur-sm"></div>

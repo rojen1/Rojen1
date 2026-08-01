@@ -143,6 +143,32 @@ export async function fetchDriversDayStats(dateKey) {
 }
 
 /**
+ * Admin: full day detail for one driver.
+ * @param {string} username
+ * @param {string} dateKey
+ */
+export async function fetchDriverDayDetail(username, dateKey) {
+  const key = normalizeUsername(username);
+  const accountSnap = await get(accountRef(key));
+  if (!accountSnap.exists()) {
+    throw new Error('Потребителят не е намерен.');
+  }
+
+  const account = accountSnap.val();
+  const daySnap = await get(ref(getFirebaseDb(), `accounts/${key}/days/${dateKey}`));
+  const day = daySnap.exists() ? daySnap.val() : null;
+
+  return {
+    username: key,
+    displayName: account.displayName || key,
+    role: account.role === 'admin' ? 'admin' : 'driver',
+    dateKey,
+    updatedAt: day?.updatedAt || null,
+    deliveries: day?.deliveries || []
+  };
+}
+
+/**
  * @param {string} username
  * @param {string} password
  * @returns {Promise<{ username: string, displayName: string, role: UserRole }>}
