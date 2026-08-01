@@ -59,9 +59,50 @@ function updateHeaderDate(dateKey) {
 }
 
 function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
-  }
+  if (!('serviceWorker' in navigator)) return;
+
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+
+  navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' })
+    .then((reg) => {
+      const showBannerIfWaiting = () => {
+        if (!reg.waiting || !navigator.serviceWorker.controller) return;
+
+        const banner = document.getElementById('update-banner');
+        const btn = document.getElementById('btn-apply-update');
+        if (!banner || !btn || !banner.classList.contains('hidden')) return;
+
+        banner.classList.remove('hidden');
+        btn.onclick = () => {
+          reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
+        };
+      };
+
+      if (reg.waiting) showBannerIfWaiting();
+
+      reg.addEventListener('updatefound', () => {
+        const worker = reg.installing;
+        if (!worker) return;
+
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'installed') showBannerIfWaiting();
+        });
+      });
+
+      const checkForUpdates = () => reg.update().catch(() => {});
+      checkForUpdates();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkForUpdates();
+      });
+      setInterval(checkForUpdates, 60 * 60 * 1000);
+    })
+    .catch(() => {});
 }
 
 function showVersionBadge() {

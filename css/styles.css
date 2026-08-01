@@ -523,7 +523,46 @@ body {
   border-radius: 4px;
 }
 
-/* Daily course date switch (today / tomorrow) */
+/* App update banner */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(30, 58, 95, 0.35);
+}
+
+.update-banner.hidden {
+  display: none;
+}
+
+.update-banner-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.update-banner-btn {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #1e3a5f;
+}
+
+[data-theme="dark"] .update-banner {
+  background: linear-gradient(135deg, #1e3a5f, #1d4ed8);
+}
 .course-date-btn {
   color: #64748b;
   background: transparent;
