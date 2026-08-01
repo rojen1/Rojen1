@@ -205,6 +205,19 @@
               <input type="number" id="input-amount" required min="0" step="0.01" placeholder="0.00"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 focus:border-navy/40 text-sm">
             </div>
+            <div>
+              <span class="block text-xs font-medium text-slate-500 mb-1">Плащане</span>
+              <div class="flex gap-2" role="group" aria-label="Тип плащане">
+                <button type="button" id="btn-pay-invoice" aria-pressed="true"
+                  class="payment-type-btn payment-type-btn--active flex-1 py-2 rounded-xl text-xs font-semibold border border-slate-200">
+                  Фактура
+                </button>
+                <button type="button" id="btn-pay-cash" aria-pressed="false"
+                  class="payment-type-btn flex-1 py-2 rounded-xl text-xs font-semibold border border-slate-200">
+                  💵 В брой
+                </button>
+              </div>
+            </div>
             <button type="submit"
               class="w-full py-3 rounded-xl bg-gradient-to-r from-navy to-navy-light text-white font-semibold text-sm shadow-md hover:shadow-lg active:scale-[0.98] transition-all">
               Добави спирка
@@ -257,6 +270,15 @@
               <div class="flex justify-between items-center col-span-2 pt-2 mt-1 border-t border-slate-100">
                 <span class="text-slate-600 font-medium">Общо за деня</span>
                 <span id="sum-total" class="font-bold text-lg text-success">0.00 €</span>
+              </div>
+              <div id="cash-summary-block" class="hidden col-span-2 pt-3 mt-1 border-t border-amber-200">
+                <div class="bg-amber-50 rounded-xl p-3 border border-amber-200">
+                  <div class="flex justify-between items-center gap-2">
+                    <span class="text-sm font-semibold text-amber-900">💵 За отчитане</span>
+                    <span id="sum-cash-to-report" class="font-bold text-lg text-amber-900">0.00 €</span>
+                  </div>
+                  <p id="sum-cash-detail" class="text-xs text-amber-800 mt-1"></p>
+                </div>
               </div>
             </div>
           </div>

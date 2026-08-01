@@ -1,5 +1,5 @@
 import { groupDeliveriesByRegion } from './regions.js';
-import { formatDisplayDate, formatEUR } from './calculations.js';
+import { formatDisplayDate, formatEUR, calcCashSummary } from './calculations.js';
 
 const LINE = '━━━━━━━━━━━━━━━━━━━━━━';
 
@@ -35,15 +35,24 @@ export function formatWaybillText(deliveries, { dateKey, driverName = '' }) {
     lines.push('');
 
     group.deliveries.forEach((delivery, index) => {
-      lines.push(`${index + 1}. ${delivery.clientName}`);
+      const cashLabel = delivery.isCash ? ' · брой' : '';
+      lines.push(`${index + 1}. ${delivery.clientName}${cashLabel}`);
       lines.push(`   ${formatEUR(delivery.amount)}`);
       lines.push('');
     });
   }
 
+  const cash = calcCashSummary(deliveries);
+
   lines.push(LINE);
   lines.push(`ОБЩО: ${deliveries.length} спирки`);
   lines.push(`СУМА: ${formatEUR(totalAmount)}`);
+  if (cash.totalCashCount) {
+    lines.push(`В БРОЙ: ${cash.totalCashCount} спирки · ${formatEUR(cash.totalCashAmount)}`);
+    if (cash.toReportCount) {
+      lines.push(`ЗА ОТЧИТАНЕ: ${formatEUR(cash.toReportAmount)} (${cash.toReportCount} сп.)`);
+    }
+  }
   lines.push(LINE);
 
   return lines.join('\n').trim();

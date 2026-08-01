@@ -1,6 +1,7 @@
 import { loadData, saveDay, getDay, getCurrentUsername } from '../storage.js';
 import {
   calcDaySummary,
+  calcCashSummary,
   formatEUR,
   todayKey,
   tomorrowKey,
@@ -20,6 +21,9 @@ import { formatWaybillText, copyTextToClipboard } from '../waybill.js';
 
 const COURSE_DATE_KEY = 'rojen1_course_date';
 
+/** @type {boolean} */
+let addPaymentIsCash = false;
+
 /** @type {import('../app.js').DailyViewCallbacks} */
 let callbacks = {};
 
@@ -31,10 +35,12 @@ export function initDailyView(cb) {
   document.getElementById('input-region')?.addEventListener('change', handleRegionSelectChange);
   document.getElementById('form-add-delivery')?.addEventListener('submit', handleAddDelivery);
   document.getElementById('delivery-list')?.addEventListener('change', handleToggle);
-  document.getElementById('delivery-list')?.addEventListener('click', handleDelete);
+  document.getElementById('delivery-list')?.addEventListener('click', handleCardClick);
   document.getElementById('btn-copy-waybill')?.addEventListener('click', handleCopyWaybill);
   document.getElementById('btn-course-today')?.addEventListener('click', () => selectCourseDate(todayKey()));
   document.getElementById('btn-course-tomorrow')?.addEventListener('click', () => selectCourseDate(tomorrowKey()));
+  document.getElementById('btn-pay-invoice')?.addEventListener('click', () => setAddPaymentType(false));
+  document.getElementById('btn-pay-cash')?.addEventListener('click', () => setAddPaymentType(true));
 }
 
 export function renderDailyView() {
@@ -49,6 +55,7 @@ export function renderDailyView() {
   renderRegionProgress(groups);
   renderDeliveryList(groups);
   updateSummaryBar(summary);
+  updateCashSummaryBar(day.deliveries);
   updateWaybillButton(day.deliveries.length);
   updateSyncInfo(dateKey, day.deliveries.length);
   callbacks.onDateUpdate?.(dateKey);
@@ -274,14 +281,27 @@ function renderDeliveryList(groups) {
   `).join('');
 }
 
+function setAddPaymentType(isCash) {
+  addPaymentIsCash = isCash;
+  document.getElementById('btn-pay-invoice')?.classList.toggle('payment-type-btn--active', !isCash);
+  document.getElementById('btn-pay-cash')?.classList.toggle('payment-type-btn--active', isCash);
+  document.getElementById('btn-pay-invoice')?.setAttribute('aria-pressed', String(!isCash));
+  document.getElementById('btn-pay-cash')?.setAttribute('aria-pressed', String(isCash));
+}
+
 /** @param {import('../storage.js').Delivery} d */
 function renderDeliveryCard(d) {
+  const isCash = !!d.isCash;
+
   return `
     <article class="delivery-card ${d.delivered ? 'delivered' : 'bg-white'} rounded-2xl shadow-card p-4 border border-navy/5 transition-all duration-300"
       data-id="${d.id}">
       <div class="flex items-center gap-2">
         <div class="flex-1 min-w-0">
-          <h3 class="delivery-name font-semibold text-navy truncate">${escapeHtml(d.clientName)}</h3>
+          <div class="flex items-center gap-2 min-w-0">
+            <h3 class="delivery-name font-semibold text-navy truncate">${escapeHtml(d.clientName)}</h3>
+            ${isCash ? '<span class="cash-badge shrink-0">Брой</span>' : ''}
+          </div>
           <p class="delivery-amount text-lg font-bold mt-0.5 ${d.delivered ? '' : 'text-accent-coral'}">${formatEUR(d.amount)}</p>
         </div>
         <button type="button" data-action="delete" data-id="${d.id}" aria-label="Изтрий спирка"
@@ -295,6 +315,18 @@ function renderDeliveryCard(d) {
           <input type="checkbox" ${d.delivered ? 'checked' : ''} data-action="toggle" data-id="${d.id}">
           <span class="toggle-slider"></span>
         </label>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <button type="button" data-action="set-payment" data-id="${d.id}" data-cash="false"
+          class="payment-chip ${!isCash ? 'payment-chip--active' : ''}">Фактура</button>
+        <button type="button" data-action="set-payment" data-id="${d.id}" data-cash="true"
+          class="payment-chip ${isCash ? 'payment-chip--active payment-chip--cash' : ''}">💵 Брой</button>
+        ${isCash && d.delivered ? `
+          <button type="button" data-action="toggle-reported" data-id="${d.id}"
+            class="cash-reported-btn ${d.cashReported ? 'cash-reported-btn--done' : ''}">
+            ${d.cashReported ? '✓ Отчетено' : 'Маркирай отчетено'}
+          </button>
+        ` : ''}
       </div>
       ${d.delivered ? `
         <div class="mt-2 flex items-center gap-1.5 text-success-dark text-xs font-medium">
@@ -313,6 +345,40 @@ function updateSummaryBar(summary) {
   document.getElementById('sum-bonus').textContent = formatEUR(summary.bonus);
   document.getElementById('sum-allowance').textContent = formatEUR(summary.allowance);
   document.getElementById('sum-total').textContent = formatEUR(summary.total);
+}
+
+/** @param {import('../storage.js').Delivery[]} deliveries */
+function updateCashSummaryBar(deliveries) {
+  const block = document.getElementById('cash-summary-block');
+  const amountEl = document.getElementById('sum-cash-to-report');
+  const detailEl = document.getElementById('sum-cash-detail');
+  if (!block || !amountEl || !detailEl) return;
+
+  const cash = calcCashSummary(deliveries);
+  if (!cash.totalCashCount) {
+    block.classList.add('hidden');
+    return;
+  }
+
+  block.classList.remove('hidden');
+  amountEl.textContent = formatEUR(cash.toReportAmount);
+
+  const parts = [];
+  if (cash.toReportCount) {
+    parts.push(`${cash.toReportCount} спирки за предаване в склад`);
+  }
+  if (cash.reportedCount) {
+    parts.push(`${cash.reportedCount} отчетени (${formatEUR(cash.reportedAmount)})`);
+  }
+  if (cash.pendingCount) {
+    parts.push(`${cash.pendingCount} в брой, още не доставени`);
+  }
+  if (!cash.toReportCount && !cash.pendingCount && cash.reportedCount) {
+    parts.unshift('Всичко отчетено');
+    amountEl.textContent = formatEUR(0);
+  }
+
+  detailEl.textContent = parts.join(' · ') || `${cash.totalCashCount} спирки в брой`;
 }
 
 function getSelectedRegion() {
@@ -347,6 +413,8 @@ async function handleAddDelivery(e) {
     amount,
     region,
     delivered: false,
+    isCash: addPaymentIsCash,
+    cashReported: false,
     createdAt: new Date().toISOString()
   });
 
@@ -396,6 +464,9 @@ async function handleToggle(e) {
   if (!delivery) return;
 
   delivery.delivered = e.target.checked;
+  if (!delivery.delivered) {
+    delivery.cashReported = false;
+  }
 
   try {
     await saveDay(dateKey, day);
@@ -406,11 +477,46 @@ async function handleToggle(e) {
   }
 }
 
-async function handleDelete(e) {
-  const btn = e.target.closest('[data-action="delete"]');
-  if (!btn) return;
+async function handleCardClick(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn || btn.dataset.action === 'toggle') return;
 
+  const action = btn.dataset.action;
   const id = btn.dataset.id;
+  if (!id) return;
+
+  if (action === 'delete') {
+    await handleDelete(id);
+    return;
+  }
+
+  const dateKey = getCourseDateKey();
+  const day = getDay(dateKey);
+  const delivery = day.deliveries.find(d => d.id === id);
+  if (!delivery) return;
+
+  if (action === 'set-payment') {
+    const isCash = btn.dataset.cash === 'true';
+    delivery.isCash = isCash;
+    if (!isCash) {
+      delivery.cashReported = false;
+    }
+  } else if (action === 'toggle-reported') {
+    delivery.cashReported = !delivery.cashReported;
+  } else {
+    return;
+  }
+
+  try {
+    await saveDay(dateKey, day);
+    renderDailyView();
+  } catch (err) {
+    showToast(err.message || 'Грешка при запис.');
+  }
+}
+
+/** @param {string} id */
+async function handleDelete(id) {
   const dateKey = getCourseDateKey();
   const day = getDay(dateKey);
   const delivery = day.deliveries.find(d => d.id === id);

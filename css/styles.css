@@ -543,3 +543,122 @@ body {
   color: #ffffff;
   background: linear-gradient(135deg, #1e3a5f, #2563eb);
 }
+
+.payment-type-btn {
+  color: #64748b;
+  background: #faf8f5;
+}
+
+.payment-type-btn--active {
+  color: #1e3a5f;
+  background: #ffffff;
+  border-color: #1e3a5f !important;
+  box-shadow: 0 1px 4px rgba(30, 58, 95, 0.12);
+}
+
+#btn-pay-cash.payment-type-btn--active {
+  color: #92400e;
+  border-color: #fbbf24 !important;
+  background: #fffbeb;
+}
+
+.payment-chip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.payment-chip--active {
+  border-color: #1e3a5f;
+  color: #1e3a5f;
+  background: #eef2ff;
+}
+
+.payment-chip--cash.payment-chip--active {
+  border-color: #f59e0b;
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.cash-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.cash-reported-btn {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px dashed #f59e0b;
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.cash-reported-btn--done {
+  border-style: solid;
+  border-color: #16a34a;
+  color: #166534;
+  background: #dcfce7;
+}
+
+[data-theme="dark"] .payment-type-btn {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .payment-type-btn--active {
+  color: #e2e8f0;
+  background: #334155;
+  border-color: #60a5fa !important;
+}
+
+[data-theme="dark"] #btn-pay-cash.payment-type-btn--active {
+  color: #fcd34d;
+  background: #422006;
+  border-color: #f59e0b !important;
+}
+
+[data-theme="dark"] .payment-chip {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .payment-chip--active {
+  background: #1e3a5f;
+  border-color: #60a5fa;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .payment-chip--cash.payment-chip--active {
+  background: #422006;
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+
+[data-theme="dark"] .cash-badge {
+  background: #422006;
+  border-color: #b45309;
+  color: #fcd34d;
+}
+
+[data-theme="dark"] #cash-summary-block .bg-amber-50 {
+  background: #422006 !important;
+  border-color: #b45309 !important;
+}
+
+[data-theme="dark"] #cash-summary-block .text-amber-900,
+[data-theme="dark"] #cash-summary-block .text-amber-800 {
+  color: #fcd34d !important;
+}
