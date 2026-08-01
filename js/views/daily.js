@@ -20,6 +20,7 @@ import {
 import { formatWaybillText, copyTextToClipboard } from '../waybill.js';
 import { collectClientNames, hasClientOnDay } from '../client-history.js';
 import { moveDeliveryInRegion, reorderDeliveryBefore } from '../reorder.js';
+import { initCashCalculator } from '../cash-calculator.js';
 
 const COURSE_DATE_KEY = 'rojen1_course_date';
 
@@ -51,6 +52,13 @@ export function initDailyView(cb) {
   document.getElementById('btn-course-tomorrow')?.addEventListener('click', () => selectCourseDate(tomorrowKey()));
   document.getElementById('btn-pay-invoice')?.addEventListener('click', () => setAddPaymentType(false));
   document.getElementById('btn-pay-cash')?.addEventListener('click', () => setAddPaymentType(true));
+
+  initCashCalculator({
+    getExpectedCash: () => {
+      const dateKey = getCourseDateKey();
+      return calcCashSummary(getDay(dateKey).deliveries).toReportAmount;
+    }
+  });
 }
 
 export function renderDailyView() {
