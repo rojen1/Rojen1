@@ -277,10 +277,6 @@ function renderSummaryCards(summary) {
     <div class="bg-white rounded-xl shadow-card p-3 border border-navy/5">
       <p class="text-xs text-slate-500">Общ надник</p>
       <p class="text-lg font-bold text-slate-700">${formatEUR(summary.totalAllowance)}</p>
-    </div>
-    <div class="bg-white rounded-xl shadow-card p-3 border border-navy/5">
-      <p class="text-xs text-slate-500">Ваучер бонус</p>
-      <p class="text-lg font-bold text-accent-sky">${formatEUR(summary.voucher)}</p>
     </div>`;
 }
 
@@ -300,6 +296,6 @@ function renderPayoutBanner(summary) {
       </div>
     </div>
     <p class="text-white/60 text-xs mt-2">
-      ${formatEUR(summary.totalDaily)} дневни + ${formatEUR(summary.voucher)} ваучер
+      Бонус + надник за ${summary.rows.filter(r => !r.isPlanned).length} работни дни
     </p>`;
 }

@@ -59,9 +59,8 @@ export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
     String(summary.totalTurnover),
     String(summary.totalBonus),
     String(summary.totalAllowance),
-    String(summary.finalPayout)
+    String(summary.totalDaily)
   ]);
-  rows.push(['Ваучер', '', '', '', String(summary.voucher)]);
   rows.push([]);
   rows.push(['Детайли по спирки']);
   rows.push(['Дата', 'Клиент', 'Район', 'Сума (EUR)', 'Доставено', 'Плащане', 'Бележка']);

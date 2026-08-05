@@ -62,7 +62,7 @@ export function calcPlannedTurnover(deliveries) {
  * @param {Record<string, import('./storage.js').DayRecord>} allDays
  * @param {number} year
  * @param {number} month 0-indexed
- * @param {{ bonusPercent: number, dailyAllowance: number, monthlyVoucher: number }} settings
+ * @param {{ bonusPercent: number, dailyAllowance: number }} settings
  */
 export function calcMonthSummary(allDays, year, month, settings) {
   const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
@@ -103,17 +103,13 @@ export function calcMonthSummary(allDays, year, month, settings) {
     }
   }
 
-  const voucher = settings.monthlyVoucher;
-  const finalPayout = totalDaily + voucher;
-
   return {
     rows,
     totalTurnover,
     totalBonus,
     totalAllowance,
     totalDaily,
-    voucher,
-    finalPayout
+    finalPayout: totalDaily
   };
 }
 

@@ -13,13 +13,12 @@ const SESSION_KEY = 'rozhen1_session';
 
 export const DEFAULT_SETTINGS = {
   bonusPercent: 0.25,
-  dailyAllowance: 33.16,
-  monthlyVoucher: 100
+  dailyAllowance: 33.16
 };
 
 /** @typedef {{ id: string, clientName: string, amount: number, delivered: boolean, createdAt: string, region?: string, isCash?: boolean, cashReported?: boolean, note?: string }} Delivery */
 /** @typedef {{ deliveries: Delivery[], updatedAt: string }} DayRecord */
-/** @typedef {{ bonusPercent: number, dailyAllowance: number, monthlyVoucher: number, regions?: string[] }} Settings */
+/** @typedef {{ bonusPercent: number, dailyAllowance: number, regions?: string[] }} Settings */
 /** @typedef {{ role: 'admin' | 'driver', username: string, displayName?: string, disabled?: boolean }} UserProfile */
 /** @typedef {{ settings: Settings, days: Record<string, DayRecord>, profile: UserProfile | null }} AppData */
 
@@ -234,6 +233,7 @@ export async function updateSettings(settings) {
   if (!currentUsername) throw new Error('Not signed in');
 
   const merged = { ...cache.settings, ...settings };
+  delete merged.monthlyVoucher;
   cache.settings = merged;
   notify();
 

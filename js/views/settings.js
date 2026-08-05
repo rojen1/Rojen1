@@ -27,7 +27,6 @@ function openModal() {
   const data = loadData();
   document.getElementById('setting-bonus').value = data.settings.bonusPercent;
   document.getElementById('setting-allowance').value = data.settings.dailyAllowance;
-  document.getElementById('setting-voucher').value = data.settings.monthlyVoucher;
   updateThemeButtonStates();
 
   document.getElementById('modal-settings').classList.remove('hidden');
@@ -44,12 +43,11 @@ async function handleSave(e) {
 
   const bonusPercent = parseFloat(document.getElementById('setting-bonus').value);
   const dailyAllowance = parseFloat(document.getElementById('setting-allowance').value);
-  const monthlyVoucher = parseFloat(document.getElementById('setting-voucher').value);
 
-  if ([bonusPercent, dailyAllowance, monthlyVoucher].some(v => isNaN(v) || v < 0)) return;
+  if ([bonusPercent, dailyAllowance].some(v => isNaN(v) || v < 0)) return;
 
   try {
-    await updateSettings({ bonusPercent, dailyAllowance, monthlyVoucher });
+    await updateSettings({ bonusPercent, dailyAllowance });
     closeModal();
     onSettingsSaved();
     showToast('Настройките са запазени');
