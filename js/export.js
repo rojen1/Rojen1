@@ -1,4 +1,5 @@
-import { calcMonthSummary, formatShortDate } from './calculations.js';
+import { calcMonthSummary, formatShortDate, getMonthDayKeys } from './calculations.js';
+import { normalizeDeliveries } from './storage.js';
 
 /** @param {string} value */
 function csvCell(value) {
@@ -34,7 +35,6 @@ export function downloadTextFile(filename, content) {
  */
 export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
   const summary = calcMonthSummary(allDays, year, month, settings);
-  const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
 
   /** @type {string[][]} */
   const rows = [
@@ -65,13 +65,11 @@ export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
   rows.push(['Детайли по спирки']);
   rows.push(['Дата', 'Клиент', 'Район', 'Сума (EUR)', 'Доставено', 'Плащане', 'Бележка']);
 
-  const dayKeys = Object.keys(allDays)
-    .filter(key => key.startsWith(prefix))
-    .sort();
+  const dayKeys = getMonthDayKeys(allDays, year, month);
 
   for (const dateKey of dayKeys) {
-    const day = allDays[dateKey];
-    for (const d of day?.deliveries || []) {
+    const deliveries = normalizeDeliveries(allDays[dateKey]?.deliveries);
+    for (const d of deliveries) {
       rows.push([
         formatShortDate(dateKey),
         d.clientName || '',

@@ -1,4 +1,4 @@
-import { loadData, getDay } from '../storage.js';
+import { loadData, getDay, saveDay, normalizeDeliveries } from '../storage.js';
 import {
   calcDaySummary,
   calcCashSummary,
@@ -6,13 +6,15 @@ import {
   formatEUR,
   formatShortDate,
   formatMonthLabel,
-  formatDisplayDate
+  formatDisplayDate,
+  isDateKeyInMonth
 } from '../calculations.js';
 import { groupDeliveriesByRegion } from '../regions.js';
 import { exportMonthCsv } from '../export.js';
 
 let currentYear;
 let currentMonth;
+let detailDateKey = null;
 
 /** @param {number} year @param {number} month 0-11 */
 function getNextMonth(year, month) {
@@ -28,10 +30,9 @@ function isFutureMonth(year, month) {
 
 /** @param {Record<string, { deliveries?: unknown[] }>} allDays @param {number} year @param {number} month */
 function monthHasDeliveries(allDays, year, month) {
-  const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
   return Object.keys(allDays).some(key => {
-    if (!key.startsWith(prefix)) return false;
-    return (allDays[key]?.deliveries?.length ?? 0) > 0;
+    if (!isDateKeyInMonth(key, year, month)) return false;
+    return normalizeDeliveries(allDays[key]?.deliveries).length > 0;
   });
 }
 
@@ -72,6 +73,7 @@ export function initArchiveView() {
   document.getElementById('archive-table-body')?.addEventListener('keydown', handleRowKeydown);
   document.getElementById('btn-close-day-detail')?.addEventListener('click', closeDayDetail);
   document.getElementById('day-detail-backdrop')?.addEventListener('click', closeDayDetail);
+  document.getElementById('day-detail-deliveries')?.addEventListener('click', handleDayDetailClick);
   document.getElementById('btn-export-month')?.addEventListener('click', handleExportMonth);
 }
 
@@ -162,6 +164,7 @@ function handleRowKeydown(e) {
 }
 
 function openDayDetail(dateKey) {
+  detailDateKey = dateKey;
   const data = loadData();
   const day = getDay(dateKey);
   const summary = calcDaySummary(day.deliveries, data.settings);
@@ -211,15 +214,23 @@ function openDayDetail(dateKey) {
         </p>
         <ul class="space-y-2">
           ${g.deliveries.map(d => `
-            <li class="day-detail-item ${d.delivered ? 'delivered' : 'bg-cream'} rounded-xl p-3 border border-navy/5 flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <p class="day-detail-client font-medium text-navy truncate">${escapeHtml(d.clientName)}${d.isCash ? ' · брой' : ''}</p>
-                ${d.note ? `<p class="text-xs text-slate-500 mt-0.5 truncate">📝 ${escapeHtml(d.note)}</p>` : ''}
-                ${d.delivered
-                  ? `<p class="text-xs mt-0.5 ${d.isCash ? 'text-amber-700 font-medium' : 'text-success-dark font-medium'}">${d.isCash ? 'В брой' : 'Доставено'}</p>`
-                  : '<p class="text-xs text-slate-400 mt-0.5">Недоставено</p>'}
+            <li class="day-detail-item ${d.delivered ? 'delivered' : 'bg-cream'} rounded-xl p-3 border border-navy/5">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <p class="day-detail-client font-medium text-navy truncate">${escapeHtml(d.clientName)}${d.isCash ? ' · брой' : ''}</p>
+                  ${d.note ? `<p class="text-xs text-slate-500 mt-0.5 truncate">📝 ${escapeHtml(d.note)}</p>` : ''}
+                  ${d.delivered
+                    ? `<p class="text-xs mt-0.5 ${d.isCash ? 'text-amber-700 font-medium' : 'text-success-dark font-medium'}">${d.isCash ? 'В брой' : 'Доставено'}</p>`
+                    : '<p class="text-xs text-slate-400 mt-0.5">Недоставено</p>'}
+                </div>
+                <p class="day-detail-amount font-bold shrink-0 ${d.delivered ? '' : 'text-accent-coral'}">${formatEUR(d.amount)}</p>
               </div>
-              <p class="day-detail-amount font-bold shrink-0 ${d.delivered ? '' : 'text-accent-coral'}">${formatEUR(d.amount)}</p>
+              <div class="flex gap-2 mt-2">
+                <button type="button" data-action="edit-note" data-id="${d.id}"
+                  class="text-xs px-2.5 py-1 rounded-lg border border-navy/15 text-navy">${d.note ? '✏️ Бележка' : '📝 Бележка'}</button>
+                <button type="button" data-action="delete" data-id="${d.id}"
+                  class="text-xs px-2.5 py-1 rounded-lg border border-red-200 text-red-600">Изтрий</button>
+              </div>
             </li>
           `).join('')}
         </ul>
@@ -232,8 +243,46 @@ function openDayDetail(dateKey) {
 }
 
 function closeDayDetail() {
+  detailDateKey = null;
   document.getElementById('modal-day-detail').classList.add('hidden');
   document.body.style.overflow = '';
+}
+
+async function handleDayDetailClick(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn || !detailDateKey) return;
+
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+  if (!id) return;
+
+  const day = getDay(detailDateKey);
+  const delivery = day.deliveries.find(d => d.id === id);
+  if (!delivery) return;
+
+  if (action === 'delete') {
+    if (!confirm(`Изтриване на „${delivery.clientName}“ от ${formatShortDate(detailDateKey)}?`)) return;
+    day.deliveries = day.deliveries.filter(d => d.id !== id);
+  } else if (action === 'edit-note') {
+    const next = prompt('Бележка за спирката:', delivery.note || '');
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (trimmed) {
+      delivery.note = trimmed;
+    } else {
+      delete delivery.note;
+    }
+  } else {
+    return;
+  }
+
+  try {
+    await saveDay(detailDateKey, day);
+    openDayDetail(detailDateKey);
+    renderArchiveView();
+  } catch (err) {
+    showExportToast(err.message || 'Грешка при запис.');
+  }
 }
 
 function handleExportMonth() {

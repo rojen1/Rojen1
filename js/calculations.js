@@ -57,6 +57,24 @@ export function calcPlannedTurnover(deliveries) {
   return deliveries.reduce((sum, d) => sum + (d.amount || 0), 0);
 }
 
+/** @param {string} dateKey @param {number} year @param {number} month 0-indexed */
+export function isDateKeyInMonth(dateKey, year, month) {
+  const parts = String(dateKey).split('-').map(Number);
+  if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return false;
+  return parts[0] === year && parts[1] === month + 1;
+}
+
+/**
+ * @param {Record<string, import('./storage.js').DayRecord>} allDays
+ * @param {number} year
+ * @param {number} month 0-indexed
+ */
+export function getMonthDayKeys(allDays, year, month) {
+  return Object.keys(allDays)
+    .filter(key => isDateKeyInMonth(key, year, month))
+    .sort();
+}
+
 /**
  * Aggregate monthly stats from all day records in a given month.
  * @param {Record<string, import('./storage.js').DayRecord>} allDays
@@ -65,7 +83,6 @@ export function calcPlannedTurnover(deliveries) {
  * @param {{ bonusPercent: number, dailyAllowance: number }} settings
  */
 export function calcMonthSummary(allDays, year, month, settings) {
-  const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
   const rows = [];
   const today = todayKey();
 
@@ -74,9 +91,7 @@ export function calcMonthSummary(allDays, year, month, settings) {
   let totalAllowance = 0;
   let totalDaily = 0;
 
-  const sortedKeys = Object.keys(allDays)
-    .filter(key => key.startsWith(prefix))
-    .sort();
+  const sortedKeys = getMonthDayKeys(allDays, year, month);
 
   for (const dateKey of sortedKeys) {
     const day = allDays[dateKey];

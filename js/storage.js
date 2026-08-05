@@ -37,6 +37,9 @@ const listeners = [];
 /** @type {(() => void)[]} */
 let unsubscribes = [];
 
+/** @type {Set<string>} */
+const pendingDayWrites = new Set();
+
 function getDefaultData() {
   return {
     settings: { ...DEFAULT_SETTINGS },
@@ -47,6 +50,38 @@ function getDefaultData() {
 
 function notify() {
   listeners.forEach(fn => fn());
+}
+
+/** @param {unknown} raw */
+export function normalizeDeliveries(raw) {
+  if (!raw) return [];
+
+  /** @type {import('./storage.js').Delivery[]} */
+  let list;
+  if (Array.isArray(raw)) {
+    list = raw.slice();
+  } else if (typeof raw === 'object') {
+    list = Object.keys(raw)
+      .filter(k => /^\d+$/.test(k))
+      .sort((a, b) => Number(a) - Number(b))
+      .map(k => raw[k]);
+  } else {
+    return [];
+  }
+
+  return list
+    .filter(d => d && typeof d === 'object')
+    .map(d => {
+      /** @type {import('./storage.js').Delivery} */
+      const delivery = { ...d };
+      const note = typeof delivery.note === 'string' ? delivery.note.trim() : '';
+      if (note) {
+        delivery.note = note;
+      } else {
+        delete delivery.note;
+      }
+      return delivery;
+    });
 }
 
 /** @param {() => void} fn */
@@ -64,7 +99,14 @@ export function loadData() {
 
 /** @param {string} dateKey */
 export function getDay(dateKey) {
-  return cache.days[dateKey] || { deliveries: [], updatedAt: new Date().toISOString() };
+  const day = cache.days[dateKey];
+  if (!day) {
+    return { deliveries: [], updatedAt: new Date().toISOString() };
+  }
+  return {
+    deliveries: normalizeDeliveries(day.deliveries),
+    updatedAt: day.updatedAt || new Date().toISOString()
+  };
 }
 
 /** @param {string} username */
@@ -135,8 +177,9 @@ export async function initUserStorage(username, role) {
         if (snap.exists()) {
           const raw = snap.val();
           for (const [dateKey, day] of Object.entries(raw)) {
+            if (pendingDayWrites.has(dateKey)) continue;
             days[dateKey] = {
-              deliveries: day.deliveries || [],
+              deliveries: normalizeDeliveries(day.deliveries),
               updatedAt: day.updatedAt || new Date().toISOString()
             };
           }
@@ -252,9 +295,9 @@ function sanitizeForFirebase(value) {
   /** @type {Record<string, unknown>} */
   const out = {};
   for (const [key, val] of Object.entries(value)) {
-    if (val !== undefined) {
-      out[key] = sanitizeForFirebase(val);
-    }
+    if (val === undefined) continue;
+    if (key === 'note' && (typeof val !== 'string' || !val.trim())) continue;
+    out[key] = sanitizeForFirebase(val);
   }
   return out;
 }
@@ -264,14 +307,25 @@ function sanitizeForFirebase(value) {
 export async function saveDay(dateKey, dayRecord) {
   if (!currentUsername) throw new Error('Not signed in');
 
+  const normalizedDeliveries = normalizeDeliveries(dayRecord.deliveries);
   const record = /** @type {DayRecord} */ (sanitizeForFirebase({
-    ...dayRecord,
+    deliveries: normalizedDeliveries,
     updatedAt: new Date().toISOString()
   }));
 
-  await set(dayRef(currentUsername, dateKey), record);
-  cache.days[dateKey] = record;
-  notify();
+  pendingDayWrites.add(dateKey);
+  try {
+    if (!record.deliveries.length) {
+      await remove(dayRef(currentUsername, dateKey));
+      delete cache.days[dateKey];
+    } else {
+      await set(dayRef(currentUsername, dateKey), record);
+      cache.days[dateKey] = record;
+    }
+    notify();
+  } finally {
+    pendingDayWrites.delete(dateKey);
+  }
 }
 
 export async function clearAllData() {
