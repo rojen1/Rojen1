@@ -68,7 +68,11 @@ export function initDailyView(cb) {
   });
 }
 
-export function renderDailyView() {
+export function renderDailyView(options = {}) {
+  const main = document.querySelector('#app main');
+  const preserveScroll = options.preserveScroll !== false;
+  const scrollTop = preserveScroll && main ? main.scrollTop : 0;
+
   const dateKey = getCourseDateKey();
   const data = loadData();
   const day = getDay(dateKey);
@@ -85,6 +89,10 @@ export function renderDailyView() {
   updateWaybillButton(day.deliveries.length);
   updateSyncInfo(dateKey, day.deliveries.length);
   callbacks.onDateUpdate?.(dateKey);
+
+  if (preserveScroll && main && scrollTop > 0) {
+    main.scrollTop = scrollTop;
+  }
 }
 
 /** Resolve which day the daily course shows (today or tomorrow planning). */
@@ -110,7 +118,7 @@ function selectCourseDate(dateKey) {
   if (dateKey !== today && dateKey !== tomorrow) return;
 
   sessionStorage.setItem(COURSE_DATE_KEY, dateKey);
-  renderDailyView();
+  renderDailyView({ preserveScroll: false });
 }
 
 /** @param {string} dateKey */
@@ -530,6 +538,8 @@ function renderDeliveryCard(d) {
           class="payment-chip ${!isCash ? 'payment-chip--active' : ''}">Банка</button>
         <button type="button" data-action="set-payment" data-id="${d.id}" data-cash="true"
           class="payment-chip ${isCash ? 'payment-chip--active payment-chip--cash' : ''}">💵 Брой</button>
+        <button type="button" data-action="edit-amount" data-id="${d.id}"
+          class="payment-chip">✏️ Сума</button>
         <button type="button" data-action="edit-note" data-id="${d.id}"
           class="payment-chip">${d.note ? '✏️ Бележка' : '📝 Бележка'}</button>
       </div>
@@ -666,6 +676,12 @@ async function handleCopyWaybill() {
   }
 }
 
+function parseAmountInput(raw) {
+  const normalized = String(raw).trim().replace(/\s/g, '').replace(',', '.');
+  const amount = parseFloat(normalized);
+  return Number.isFinite(amount) && amount >= 0 ? amount : null;
+}
+
 async function handleToggle(e) {
   if (e.target.dataset.action !== 'toggle') return;
 
@@ -679,7 +695,7 @@ async function handleToggle(e) {
 
   try {
     await saveDay(dateKey, day);
-    renderDailyView();
+    renderDailyView({ preserveScroll: true });
   } catch (err) {
     e.target.checked = !e.target.checked;
     showToast(err.message || 'Грешка при запис.');
@@ -706,6 +722,15 @@ async function handleCardClick(e) {
 
   if (action === 'set-payment') {
     delivery.isCash = btn.dataset.cash === 'true';
+  } else if (action === 'edit-amount') {
+    const next = prompt('Сума (EUR):', String(delivery.amount));
+    if (next === null) return;
+    const amount = parseAmountInput(next);
+    if (amount === null) {
+      showToast('Невалидна сума.');
+      return;
+    }
+    delivery.amount = amount;
   } else if (action === 'move-up' || action === 'move-down') {
     day.deliveries = moveDeliveryInRegion(day.deliveries, id, action === 'move-up' ? 'up' : 'down');
   } else if (action === 'edit-note') {
@@ -723,7 +748,7 @@ async function handleCardClick(e) {
 
   try {
     await saveDay(dateKey, day);
-    renderDailyView();
+    renderDailyView({ preserveScroll: true });
   } catch (err) {
     showToast(err.message || 'Грешка при запис.');
   }
@@ -758,7 +783,7 @@ async function handleDrop(e) {
 
   try {
     await saveDay(dateKey, day);
-    renderDailyView();
+    renderDailyView({ preserveScroll: true });
   } catch (err) {
     showToast(err.message || 'Грешка при подредба.');
   }
@@ -782,7 +807,7 @@ async function handleDelete(id) {
 
   try {
     await saveDay(dateKey, day);
-    renderDailyView();
+    renderDailyView({ preserveScroll: true });
   } catch (err) {
     showToast(err.message || 'Грешка при запис.');
   }

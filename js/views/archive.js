@@ -226,6 +226,8 @@ function openDayDetail(dateKey) {
                 <p class="day-detail-amount font-bold shrink-0 ${d.delivered ? '' : 'text-accent-coral'}">${formatEUR(d.amount)}</p>
               </div>
               <div class="flex gap-2 mt-2">
+                <button type="button" data-action="edit-amount" data-id="${d.id}"
+                  class="text-xs px-2.5 py-1 rounded-lg border border-navy/15 text-navy">✏️ Сума</button>
                 <button type="button" data-action="edit-note" data-id="${d.id}"
                   class="text-xs px-2.5 py-1 rounded-lg border border-navy/15 text-navy">${d.note ? '✏️ Бележка' : '📝 Бележка'}</button>
                 <button type="button" data-action="delete" data-id="${d.id}"
@@ -263,6 +265,15 @@ async function handleDayDetailClick(e) {
   if (action === 'delete') {
     if (!confirm(`Изтриване на „${delivery.clientName}“ от ${formatShortDate(detailDateKey)}?`)) return;
     day.deliveries = day.deliveries.filter(d => d.id !== id);
+  } else if (action === 'edit-amount') {
+    const next = prompt('Сума (EUR):', String(delivery.amount));
+    if (next === null) return;
+    const amount = parseAmountInput(next);
+    if (amount === null) {
+      showExportToast('Невалидна сума.');
+      return;
+    }
+    delivery.amount = amount;
   } else if (action === 'edit-note') {
     const next = prompt('Бележка за спирката:', delivery.note || '');
     if (next === null) return;
@@ -283,6 +294,12 @@ async function handleDayDetailClick(e) {
   } catch (err) {
     showExportToast(err.message || 'Грешка при запис.');
   }
+}
+
+function parseAmountInput(raw) {
+  const normalized = String(raw).trim().replace(/\s/g, '').replace(',', '.');
+  const amount = parseFloat(normalized);
+  return Number.isFinite(amount) && amount >= 0 ? amount : null;
 }
 
 function handleExportMonth() {

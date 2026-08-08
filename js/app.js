@@ -49,7 +49,7 @@ function switchView(view) {
 }
 
 function refreshActiveView() {
-  if (activeView === 'daily') renderDailyView();
+  if (activeView === 'daily') renderDailyView({ preserveScroll: true });
   else if (activeView === 'archive') renderArchiveView();
   else if (activeView === 'admin') renderAdminView();
 }

@@ -173,9 +173,12 @@ export async function initUserStorage(username, role) {
     const daysUnsub = onValue(
       daysRef(username),
       (snap) => {
-        const days = {};
+        const days = { ...cache.days };
+
         if (snap.exists()) {
           const raw = snap.val();
+          const remoteKeys = new Set(Object.keys(raw));
+
           for (const [dateKey, day] of Object.entries(raw)) {
             if (pendingDayWrites.has(dateKey)) continue;
             days[dateKey] = {
@@ -183,7 +186,15 @@ export async function initUserStorage(username, role) {
               updatedAt: day.updatedAt || new Date().toISOString()
             };
           }
+
+          for (const dateKey of Object.keys(days)) {
+            if (pendingDayWrites.has(dateKey)) continue;
+            if (!remoteKeys.has(dateKey)) {
+              delete days[dateKey];
+            }
+          }
         }
+
         cache.days = days;
         daysReady = true;
         notify();
@@ -316,13 +327,17 @@ export async function saveDay(dateKey, dayRecord) {
   pendingDayWrites.add(dateKey);
   try {
     if (!record.deliveries.length) {
-      await remove(dayRef(currentUsername, dateKey));
       delete cache.days[dateKey];
     } else {
-      await set(dayRef(currentUsername, dateKey), record);
       cache.days[dateKey] = record;
     }
     notify();
+
+    if (!record.deliveries.length) {
+      await remove(dayRef(currentUsername, dateKey));
+    } else {
+      await set(dayRef(currentUsername, dateKey), record);
+    }
   } finally {
     pendingDayWrites.delete(dateKey);
   }
