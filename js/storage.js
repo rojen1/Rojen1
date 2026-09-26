@@ -7,18 +7,20 @@ import {
   remove
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js';
 import { getFirebaseDb } from './firebase.js';
+import { syncDriverDayToSklad, syncAllDriverDaysToSklad } from './warehouse-sync.js';
+import { normalizeSettings } from './calculations.js';
 
 const LEGACY_STORAGE_KEY = 'rozhen1_data';
 const SESSION_KEY = 'rozhen1_session';
 
-export const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS = normalizeSettings({
   bonusPercent: 0.25,
-  dailyAllowance: 33.16
-};
+  monthlyNetSalary: 931
+});
 
-/** @typedef {{ id: string, clientName: string, amount: number, delivered: boolean, createdAt: string, region?: string, isCash?: boolean, cashReported?: boolean, note?: string }} Delivery */
+/** @typedef {{ id: string, clientName: string, amount: number, delivered: boolean, createdAt: string, region?: string, isCash?: boolean, cashReported?: boolean, note?: string, fromWarehouse?: boolean, warehouseOrderId?: string, salesRep?: string }} Delivery */
 /** @typedef {{ deliveries: Delivery[], updatedAt: string }} DayRecord */
-/** @typedef {{ bonusPercent: number, dailyAllowance: number, regions?: string[] }} Settings */
+/** @typedef {{ bonusPercent: number, monthlyNetSalary: number, regions?: string[] }} Settings */
 /** @typedef {{ role: 'admin' | 'driver', username: string, displayName?: string, disabled?: boolean }} UserProfile */
 /** @typedef {{ settings: Settings, days: Record<string, DayRecord>, profile: UserProfile | null }} AppData */
 
@@ -156,7 +158,7 @@ export async function initUserStorage(username, role) {
           return;
         }
         const data = snap.val();
-        cache.settings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
+        cache.settings = normalizeSettings({ ...DEFAULT_SETTINGS, ...(data.settings || {}) });
         cache.profile = {
           role: data.role || role,
           username,
@@ -199,6 +201,9 @@ export async function initUserStorage(username, role) {
         daysReady = true;
         notify();
         tryReady();
+
+        const displayName = cache.profile?.displayName || username;
+        syncAllDriverDaysToSklad(username, displayName, cache.days).catch(() => {});
       },
       reject
     );
@@ -258,7 +263,7 @@ async function migrateLegacyLocalStorage(username) {
     const parsed = JSON.parse(raw);
 
     await update(accountRef(username), {
-      settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
+      settings: normalizeSettings({ ...DEFAULT_SETTINGS, ...(parsed.settings || {}) }),
       migratedFromLocalStorage: true,
       migratedAt: new Date().toISOString()
     });
@@ -286,7 +291,7 @@ async function migrateLegacyLocalStorage(username) {
 export async function updateSettings(settings) {
   if (!currentUsername) throw new Error('Not signed in');
 
-  const merged = { ...cache.settings, ...settings };
+  const merged = normalizeSettings({ ...cache.settings, ...settings });
   delete merged.monthlyVoucher;
   cache.settings = merged;
   notify();
@@ -338,6 +343,9 @@ export async function saveDay(dateKey, dayRecord) {
     } else {
       await set(dayRef(currentUsername, dateKey), record);
     }
+
+    const displayName = cache.profile?.displayName || currentUsername;
+    await syncDriverDayToSklad(currentUsername, displayName, dateKey, record);
   } finally {
     pendingDayWrites.delete(dateKey);
   }

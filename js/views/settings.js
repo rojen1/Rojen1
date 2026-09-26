@@ -1,6 +1,11 @@
 import { loadData, updateSettings, DEFAULT_SETTINGS } from '../storage.js';
 import { handleLogout } from '../auth.js';
 import { setTheme, updateThemeButtonStates } from '../theme.js';
+import {
+  calcDailyAllowance,
+  countWorkingDaysInMonth,
+  getMonthlyNetSalary
+} from '../calculations.js';
 
 /** @type {() => void} */
 let onSettingsSaved = () => {};
@@ -21,12 +26,32 @@ export function initSettingsView({ onSaved }) {
 
   document.getElementById('theme-light')?.addEventListener('click', () => setTheme('light'));
   document.getElementById('theme-dark')?.addEventListener('click', () => setTheme('dark'));
+
+  document.getElementById('setting-monthly-salary')?.addEventListener('input', updateDailyAllowancePreview);
+}
+
+function updateDailyAllowancePreview() {
+  const preview = document.getElementById('setting-daily-preview');
+  const input = document.getElementById('setting-monthly-salary');
+  if (!preview || !input) return;
+  const monthly = parseFloat(input.value);
+  if (!Number.isFinite(monthly) || monthly <= 0) {
+    preview.textContent = '';
+    return;
+  }
+  const now = new Date();
+  const wd = countWorkingDaysInMonth(now.getFullYear(), now.getMonth());
+  const daily = calcDailyAllowance(monthly, now.getFullYear(), now.getMonth());
+  preview.textContent =
+    `За ${now.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' })}: ` +
+    `${wd} работни дни → дневен надник ${daily.toFixed(2)} €`;
 }
 
 function openModal() {
   const data = loadData();
   document.getElementById('setting-bonus').value = data.settings.bonusPercent;
-  document.getElementById('setting-allowance').value = data.settings.dailyAllowance;
+  document.getElementById('setting-monthly-salary').value = getMonthlyNetSalary(data.settings);
+  updateDailyAllowancePreview();
   updateThemeButtonStates();
 
   document.getElementById('modal-settings').classList.remove('hidden');
@@ -42,12 +67,13 @@ async function handleSave(e) {
   e.preventDefault();
 
   const bonusPercent = parseFloat(document.getElementById('setting-bonus').value);
-  const dailyAllowance = parseFloat(document.getElementById('setting-allowance').value);
+  const monthlyNetSalary = parseFloat(document.getElementById('setting-monthly-salary').value);
 
-  if ([bonusPercent, dailyAllowance].some(v => isNaN(v) || v < 0)) return;
+  if ([bonusPercent, monthlyNetSalary].some(v => isNaN(v) || v < 0)) return;
+  if (monthlyNetSalary <= 0) return;
 
   try {
-    await updateSettings({ bonusPercent, dailyAllowance });
+    await updateSettings({ bonusPercent, monthlyNetSalary });
     closeModal();
     onSettingsSaved();
     showToast('Настройките са запазени');

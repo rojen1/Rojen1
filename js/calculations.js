@@ -23,12 +23,83 @@ export function calcDailyTotal(bonus, dailyAllowance) {
   return bonus + dailyAllowance;
 }
 
+/** Mon–Fri in calendar month (0-indexed month). */
+export function countWorkingDaysInMonth(year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let count = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dow = new Date(year, month, day).getDay();
+    if (dow >= 1 && dow <= 5) count++;
+  }
+  return count;
+}
+
+/** @param {string} dateKey YYYY-MM-DD */
+export function parseDateKey(dateKey) {
+  const parts = String(dateKey).split('-').map(Number);
+  if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return null;
+  return { year: parts[0], month: parts[1] - 1, day: parts[2] };
+}
+
+/**
+ * Daily allowance = monthly net salary / working days in that calendar month.
+ * @param {number} monthlyNetSalary
+ * @param {number} year
+ * @param {number} month 0-indexed
+ */
+export function calcDailyAllowance(monthlyNetSalary, year, month) {
+  const salary = Number(monthlyNetSalary);
+  if (!Number.isFinite(salary) || salary <= 0) return 0;
+  const workDays = countWorkingDaysInMonth(year, month);
+  if (workDays <= 0) return 0;
+  return salary / workDays;
+}
+
+/** @param {import('./storage.js').Settings} settings */
+export function getMonthlyNetSalary(settings) {
+  const s = normalizeSettings(settings);
+  return s.monthlyNetSalary;
+}
+
+/**
+ * @param {Partial<import('./storage.js').Settings>} raw
+ * @returns {import('./storage.js').Settings}
+ */
+export function normalizeSettings(raw) {
+  const bonusPercent = raw?.bonusPercent ?? 0.25;
+  let monthlyNetSalary = raw?.monthlyNetSalary;
+
+  if (monthlyNetSalary == null || !Number.isFinite(Number(monthlyNetSalary)) || Number(monthlyNetSalary) <= 0) {
+    const legacyDaily = raw?.dailyAllowance;
+    if (legacyDaily != null && Number(legacyDaily) > 0) {
+      // Старият фиксиран дневен надник ≈ месечна база / 22; провери в настройки след update.
+      monthlyNetSalary = Math.round(Number(legacyDaily) * 22 * 100) / 100;
+    } else {
+      monthlyNetSalary = 931;
+    }
+  }
+
+  return {
+    bonusPercent: Number(bonusPercent),
+    monthlyNetSalary: Number(monthlyNetSalary),
+    regions: raw?.regions
+  };
+}
+
+/** @param {import('./storage.js').Settings} settings @param {string} dateKey */
+export function dailyAllowanceForDate(settings, dateKey) {
+  const parsed = parseDateKey(dateKey) || parseDateKey(todayKey());
+  if (!parsed) return 0;
+  const salary = getMonthlyNetSalary(settings);
+  return calcDailyAllowance(salary, parsed.year, parsed.month);
+}
+
 /** @param {import('./storage.js').Delivery[]} deliveries */
-/** @param {{ bonusPercent: number, dailyAllowance: number }} settings */
-export function calcDaySummary(deliveries, settings) {
+/** @param {import('./storage.js').Settings} settings @param {string} [dateKey] */
+export function calcDaySummary(deliveries, settings, dateKey) {
   const turnover = calcDailyTurnover(deliveries);
   const bonus = calcBonus(turnover, settings.bonusPercent);
-  const allowance = settings.dailyAllowance;
+  const allowance = dailyAllowanceForDate(settings, dateKey || todayKey());
   const total = calcDailyTotal(bonus, allowance);
 
   return { turnover, bonus, allowance, total };
@@ -97,7 +168,7 @@ export function calcMonthSummary(allDays, year, month, settings) {
     const day = allDays[dateKey];
     if (!day?.deliveries?.length) continue;
 
-    const summary = calcDaySummary(day.deliveries, settings);
+    const summary = calcDaySummary(day.deliveries, settings, dateKey);
     const plannedTurnover = calcPlannedTurnover(day.deliveries);
     const isFuture = dateKey > today;
     const isPlanned = isFuture || (summary.turnover === 0 && day.deliveries.some(d => !d.delivered));
@@ -118,13 +189,20 @@ export function calcMonthSummary(allDays, year, month, settings) {
     }
   }
 
+  const workDays = countWorkingDaysInMonth(year, month);
+  const monthlyNetSalary = getMonthlyNetSalary(settings);
+  const dailyRate = calcDailyAllowance(monthlyNetSalary, year, month);
+
   return {
     rows,
     totalTurnover,
     totalBonus,
     totalAllowance,
     totalDaily,
-    finalPayout: totalDaily
+    finalPayout: totalDaily,
+    workDays,
+    dailyRate,
+    monthlyNetSalary
   };
 }
 

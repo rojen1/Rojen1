@@ -167,7 +167,7 @@ function openDayDetail(dateKey) {
   detailDateKey = dateKey;
   const data = loadData();
   const day = getDay(dateKey);
-  const summary = calcDaySummary(day.deliveries, data.settings);
+  const summary = calcDaySummary(day.deliveries, data.settings, dateKey);
   const cash = calcCashSummary(day.deliveries);
 
   document.getElementById('day-detail-date').textContent = formatDisplayDate(dateKey);
@@ -362,6 +362,7 @@ function renderPayoutBanner(summary) {
       </div>
     </div>
     <p class="text-white/60 text-xs mt-2">
-      Бонус + надник за ${summary.rows.filter(r => !r.isPlanned).length} работни дни
+      Надник: ${formatEUR(summary.monthlyNetSalary)} ÷ ${summary.workDays} раб. дни = ${formatEUR(summary.dailyRate)}/ден<br>
+      Бонус + надник за ${summary.rows.filter(r => !r.isPlanned).length} дни с курс
     </p>`;
 }

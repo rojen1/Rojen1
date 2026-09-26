@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rojen1-v45';
+const CACHE_NAME = 'rojen1-v48';
 const ASSETS = [
   './',
   './index.html',
@@ -22,6 +22,7 @@ const ASSETS = [
   './js/reorder.js',
   './js/export.js',
   './js/cash-calculator.js',
+  './js/warehouse-sync.js',
   './js/views/daily.js',
   './js/views/archive.js',
   './js/views/settings.js',

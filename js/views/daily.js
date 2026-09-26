@@ -76,7 +76,7 @@ export function renderDailyView(options = {}) {
   const dateKey = getCourseDateKey();
   const data = loadData();
   const day = getDay(dateKey);
-  const summary = calcDaySummary(day.deliveries, data.settings);
+  const summary = calcDaySummary(day.deliveries, data.settings, dateKey);
   const groups = groupDeliveriesByRegion(day.deliveries);
 
   updateCourseDateSwitch(dateKey);
