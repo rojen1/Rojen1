@@ -42,17 +42,45 @@ export function parseDateKey(dateKey) {
 }
 
 /**
- * Daily allowance = monthly net salary / working days in that calendar month.
- * @param {number} monthlyNetSalary
+ * Days in month where the user has at least one delivery record.
+ * @param {Record<string, import('./storage.js').DayRecord>} allDays
  * @param {number} year
  * @param {number} month 0-indexed
  */
-export function calcDailyAllowance(monthlyNetSalary, year, month) {
+export function countWorkedDaysInMonth(allDays, year, month) {
+  return getMonthDayKeys(allDays || {}, year, month).filter(key => {
+    const day = allDays[key];
+    return (day?.deliveries?.length ?? 0) > 0;
+  }).length;
+}
+
+/**
+ * Daily allowance = monthly net salary / worked days in that month (days with records).
+ * @param {number} monthlyNetSalary
+ * @param {Record<string, import('./storage.js').DayRecord>} allDays
+ * @param {number} year
+ * @param {number} month 0-indexed
+ * @param {{ dateKey?: string, deliveries?: import('./storage.js').Delivery[] }} [activeDay]
+ */
+export function calcDailyAllowance(monthlyNetSalary, allDays, year, month, activeDay) {
   const salary = Number(monthlyNetSalary);
   if (!Number.isFinite(salary) || salary <= 0) return 0;
-  const workDays = countWorkingDaysInMonth(year, month);
-  if (workDays <= 0) return 0;
-  return salary / workDays;
+
+  let workedDays = countWorkedDaysInMonth(allDays, year, month);
+  const activeKey = activeDay?.dateKey;
+  const activeDeliveries = activeDay?.deliveries;
+  const activeHasRows = (activeDeliveries?.length ?? 0) > 0;
+
+  if (activeKey && activeHasRows && isDateKeyInMonth(activeKey, year, month)) {
+    const alreadyInData = (allDays?.[activeKey]?.deliveries?.length ?? 0) > 0;
+    if (!alreadyInData) workedDays += 1;
+  }
+
+  if (workedDays <= 0) {
+    if (!activeHasRows) return 0;
+    workedDays = 1;
+  }
+  return salary / workedDays;
 }
 
 /** @param {import('./storage.js').Settings} settings */
@@ -86,20 +114,25 @@ export function normalizeSettings(raw) {
   };
 }
 
-/** @param {import('./storage.js').Settings} settings @param {string} dateKey */
-export function dailyAllowanceForDate(settings, dateKey) {
-  const parsed = parseDateKey(dateKey) || parseDateKey(todayKey());
+/** @param {import('./storage.js').Settings} settings @param {string} dateKey @param {Record<string, import('./storage.js').DayRecord>} [allDays] @param {import('./storage.js').Delivery[]} [deliveries] */
+export function dailyAllowanceForDate(settings, dateKey, allDays, deliveries) {
+  const key = dateKey || todayKey();
+  const parsed = parseDateKey(key) || parseDateKey(todayKey());
   if (!parsed) return 0;
   const salary = getMonthlyNetSalary(settings);
-  return calcDailyAllowance(salary, parsed.year, parsed.month);
+  return calcDailyAllowance(salary, allDays || {}, parsed.year, parsed.month, {
+    dateKey: key,
+    deliveries
+  });
 }
 
 /** @param {import('./storage.js').Delivery[]} deliveries */
-/** @param {import('./storage.js').Settings} settings @param {string} [dateKey] */
-export function calcDaySummary(deliveries, settings, dateKey) {
+/** @param {import('./storage.js').Settings} settings @param {string} [dateKey] @param {Record<string, import('./storage.js').DayRecord>} [allDays] */
+export function calcDaySummary(deliveries, settings, dateKey, allDays) {
   const turnover = calcDailyTurnover(deliveries);
   const bonus = calcBonus(turnover, settings.bonusPercent);
-  const allowance = dailyAllowanceForDate(settings, dateKey || todayKey());
+  const key = dateKey || todayKey();
+  const allowance = dailyAllowanceForDate(settings, key, allDays, deliveries);
   const total = calcDailyTotal(bonus, allowance);
 
   return { turnover, bonus, allowance, total };
@@ -168,7 +201,7 @@ export function calcMonthSummary(allDays, year, month, settings) {
     const day = allDays[dateKey];
     if (!day?.deliveries?.length) continue;
 
-    const summary = calcDaySummary(day.deliveries, settings, dateKey);
+    const summary = calcDaySummary(day.deliveries, settings, dateKey, allDays);
     const plannedTurnover = calcPlannedTurnover(day.deliveries);
     const isFuture = dateKey > today;
     const isPlanned = isFuture || (summary.turnover === 0 && day.deliveries.some(d => !d.delivered));
@@ -189,9 +222,9 @@ export function calcMonthSummary(allDays, year, month, settings) {
     }
   }
 
-  const workDays = countWorkingDaysInMonth(year, month);
   const monthlyNetSalary = getMonthlyNetSalary(settings);
-  const dailyRate = calcDailyAllowance(monthlyNetSalary, year, month);
+  const workedDays = countWorkedDaysInMonth(allDays, year, month);
+  const dailyRate = calcDailyAllowance(monthlyNetSalary, allDays, year, month);
 
   return {
     rows,
@@ -200,7 +233,7 @@ export function calcMonthSummary(allDays, year, month, settings) {
     totalAllowance,
     totalDaily,
     finalPayout: totalDaily,
-    workDays,
+    workedDays,
     dailyRate,
     monthlyNetSalary
   };

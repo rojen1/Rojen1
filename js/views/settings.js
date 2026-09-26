@@ -3,7 +3,7 @@ import { handleLogout } from '../auth.js';
 import { setTheme, updateThemeButtonStates } from '../theme.js';
 import {
   calcDailyAllowance,
-  countWorkingDaysInMonth,
+  countWorkedDaysInMonth,
   getMonthlyNetSalary
 } from '../calculations.js';
 
@@ -40,11 +40,19 @@ function updateDailyAllowancePreview() {
     return;
   }
   const now = new Date();
-  const wd = countWorkingDaysInMonth(now.getFullYear(), now.getMonth());
-  const daily = calcDailyAllowance(monthly, now.getFullYear(), now.getMonth());
+  const data = loadData();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const wd = countWorkedDaysInMonth(data.days, y, m);
+  const daily = calcDailyAllowance(monthly, data.days, y, m);
+  const monthLabel = now.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' });
+  if (wd <= 0) {
+    preview.textContent =
+      `За ${monthLabel}: надникът се смята след първи ден с въведен курс (заплата ÷ брой такива дни).`;
+    return;
+  }
   preview.textContent =
-    `За ${now.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' })}: ` +
-    `${wd} работни дни → дневен надник ${daily.toFixed(2)} €`;
+    `За ${monthLabel}: ${wd} дни с курс → дневен надник ${daily.toFixed(2)} €`;
 }
 
 function openModal() {
