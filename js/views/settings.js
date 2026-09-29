@@ -2,9 +2,9 @@ import { loadData, updateSettings, DEFAULT_SETTINGS } from '../storage.js';
 import { handleLogout } from '../auth.js';
 import { setTheme, updateThemeButtonStates } from '../theme.js';
 import {
-  calcDailyAllowance,
-  countWorkedDaysInMonth,
-  getMonthlyNetSalary
+  calcMonthlyNetPayout,
+  calcMonthSummary,
+  normalizeSettings
 } from '../calculations.js';
 
 /** @type {() => void} */
@@ -27,39 +27,39 @@ export function initSettingsView({ onSaved }) {
   document.getElementById('theme-light')?.addEventListener('click', () => setTheme('light'));
   document.getElementById('theme-dark')?.addEventListener('click', () => setTheme('dark'));
 
-  document.getElementById('setting-monthly-salary')?.addEventListener('input', updateDailyAllowancePreview);
+  ['setting-gross-salary', 'setting-net-coef'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateSalaryPreview);
+  });
 }
 
-function updateDailyAllowancePreview() {
+function updateSalaryPreview() {
   const preview = document.getElementById('setting-daily-preview');
-  const input = document.getElementById('setting-monthly-salary');
-  if (!preview || !input) return;
-  const monthly = parseFloat(input.value);
-  if (!Number.isFinite(monthly) || monthly <= 0) {
+  if (!preview) return;
+  const gross = parseFloat(document.getElementById('setting-gross-salary')?.value || '');
+  const netCoef = parseFloat(document.getElementById('setting-net-coef')?.value || '');
+  if (!Number.isFinite(gross) || gross <= 0) {
     preview.textContent = '';
     return;
   }
-  const now = new Date();
+  const coef = Number.isFinite(netCoef) && netCoef > 0 ? netCoef : 0.78;
   const data = loadData();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const wd = countWorkedDaysInMonth(data.days, y, m);
-  const daily = calcDailyAllowance(monthly, data.days, y, m);
-  const monthLabel = now.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' });
-  if (wd <= 0) {
-    preview.textContent =
-      `За ${monthLabel}: надникът се смята след първи ден с въведен курс (заплата ÷ брой такива дни).`;
-    return;
-  }
+  const now = new Date();
+  const summary = calcMonthSummary(data.days, now.getFullYear(), now.getMonth(), {
+    grossMonthlySalary: gross,
+    bonusRate: 0.003,
+    netCoefficient: coef
+  });
+  const net = calcMonthlyNetPayout(gross, summary.totalTurnover, 0.003, coef);
   preview.textContent =
-    `За ${monthLabel}: ${wd} дни с курс → дневен надник ${daily.toFixed(2)} €`;
+    `Този месец (без бъдещи дни): (${gross.toFixed(0)} + ${summary.totalTurnover.toFixed(2)} × 0.003) × ${coef} ≈ ${net.toFixed(2)} € нето`;
 }
 
 function openModal() {
   const data = loadData();
-  document.getElementById('setting-bonus').value = data.settings.bonusPercent;
-  document.getElementById('setting-monthly-salary').value = getMonthlyNetSalary(data.settings);
-  updateDailyAllowancePreview();
+  const s = normalizeSettings(data.settings);
+  document.getElementById('setting-gross-salary').value = s.grossMonthlySalary;
+  document.getElementById('setting-net-coef').value = s.netCoefficient;
+  updateSalaryPreview();
   updateThemeButtonStates();
 
   document.getElementById('modal-settings').classList.remove('hidden');
@@ -74,14 +74,18 @@ function closeModal() {
 async function handleSave(e) {
   e.preventDefault();
 
-  const bonusPercent = parseFloat(document.getElementById('setting-bonus').value);
-  const monthlyNetSalary = parseFloat(document.getElementById('setting-monthly-salary').value);
+  const grossMonthlySalary = parseFloat(document.getElementById('setting-gross-salary').value);
+  const netCoefficient = parseFloat(document.getElementById('setting-net-coef').value);
 
-  if ([bonusPercent, monthlyNetSalary].some(v => isNaN(v) || v < 0)) return;
-  if (monthlyNetSalary <= 0) return;
+  if ([grossMonthlySalary, netCoefficient].some(v => isNaN(v) || v < 0)) return;
+  if (grossMonthlySalary <= 0 || netCoefficient <= 0 || netCoefficient > 1) return;
 
   try {
-    await updateSettings({ bonusPercent, monthlyNetSalary });
+    await updateSettings({
+      grossMonthlySalary,
+      bonusRate: 0.003,
+      netCoefficient
+    });
     closeModal();
     onSettingsSaved();
     showToast('Настройките са запазени');

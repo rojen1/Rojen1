@@ -40,7 +40,7 @@ export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
   const rows = [
     [`Месечен отчет - ${monthLabel}`],
     [],
-    ['Дата', 'Оборот (EUR)', 'Бонус (EUR)', 'Надник (EUR)', 'Общо (EUR)']
+    ['Дата', 'Оборот (EUR)', 'Бонус (EUR)', 'Брутна част (EUR)', 'Нето (EUR)']
   ];
 
   for (const row of summary.rows) {
@@ -59,7 +59,7 @@ export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
     String(summary.totalTurnover),
     String(summary.totalBonus),
     String(summary.totalAllowance),
-    String(summary.totalDaily)
+    String(summary.finalPayout)
   ]);
   rows.push([]);
   rows.push(['Детайли по спирки']);

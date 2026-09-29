@@ -92,12 +92,12 @@ export function renderArchiveView() {
     nextBtn.classList.toggle('pointer-events-none', !allowed);
   }
 
-  renderTable(summary.rows);
+  renderTable(summary.rows, summary);
   renderSummaryCards(summary);
   renderPayoutBanner(summary);
 }
 
-function renderTable(rows) {
+function renderTable(rows, summary) {
   const tbody = document.getElementById('archive-table-body');
   const tfoot = document.getElementById('archive-table-foot');
 
@@ -129,23 +129,13 @@ function renderTable(rows) {
     </tr>`;
   }).join('');
 
-  const totals = rows.reduce(
-    (acc, r) => ({
-      turnover: acc.turnover + r.turnover,
-      bonus: acc.bonus + r.bonus,
-      allowance: acc.allowance + r.allowance,
-      total: acc.total + r.total
-    }),
-    { turnover: 0, bonus: 0, allowance: 0, total: 0 }
-  );
-
   tfoot.innerHTML = `
     <tr class="bg-navy/5 font-bold text-navy text-xs">
       <td class="py-3 px-3">ОБЩО</td>
-      <td class="py-3 px-2 text-right">${formatEUR(totals.turnover)}</td>
-      <td class="py-3 px-2 text-right">${formatEUR(totals.bonus)}</td>
-      <td class="py-3 px-2 text-right">${formatEUR(totals.allowance)}</td>
-      <td class="py-3 px-3 text-right text-success-dark">${formatEUR(totals.total)}</td>
+      <td class="py-3 px-2 text-right">${formatEUR(summary.totalTurnover)}</td>
+      <td class="py-3 px-2 text-right">${formatEUR(summary.totalBonus)}</td>
+      <td class="py-3 px-2 text-right">${formatEUR(summary.totalAllowance)}</td>
+      <td class="py-3 px-3 text-right text-success-dark">${formatEUR(summary.finalPayout)}</td>
     </tr>`;
 }
 
@@ -192,11 +182,11 @@ function openDayDetail(dateKey) {
       <p class="font-semibold text-accent-amber">${formatEUR(summary.bonus)}</p>
     </div>
     <div class="bg-cream rounded-xl p-3 border border-navy/5">
-      <p class="text-xs text-slate-500">Надник</p>
+      <p class="text-xs text-slate-500">Брутна част</p>
       <p class="font-semibold text-slate-700">${formatEUR(summary.allowance)}</p>
     </div>
     <div class="bg-success-light rounded-xl p-3 border border-success/20">
-      <p class="text-xs text-success-dark">Общо</p>
+      <p class="text-xs text-success-dark">Нето за деня</p>
       <p class="font-bold text-success-dark">${formatEUR(summary.total)}</p>
     </div>
     ${cashHtml}`;
@@ -341,8 +331,8 @@ function renderSummaryCards(summary) {
       <p class="text-lg font-bold text-accent-amber">${formatEUR(summary.totalBonus)}</p>
     </div>
     <div class="bg-white rounded-xl shadow-card p-3 border border-navy/5">
-      <p class="text-xs text-slate-500">Общ надник</p>
-      <p class="text-lg font-bold text-slate-700">${formatEUR(summary.totalAllowance)}</p>
+      <p class="text-xs text-slate-500">Брутно общо</p>
+      <p class="text-lg font-bold text-slate-700">${formatEUR(summary.totalGross)}</p>
     </div>`;
 }
 
@@ -351,7 +341,7 @@ function renderPayoutBanner(summary) {
   banner.innerHTML = `
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-white/80 text-sm font-medium">ЗА ПЛАЩАНЕ</p>
+        <p class="text-white/80 text-sm font-medium">НЕТО ЗА ПЛАЩАНЕ</p>
         <p class="text-3xl font-bold mt-1">${formatEUR(summary.finalPayout)}</p>
       </div>
       <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
@@ -362,7 +352,7 @@ function renderPayoutBanner(summary) {
       </div>
     </div>
     <p class="text-white/60 text-xs mt-2">
-      Надник: ${formatEUR(summary.monthlyNetSalary)} ÷ ${summary.workedDays} дни с курс = ${formatEUR(summary.dailyRate)}/ден<br>
-      Бонус + надник за ${summary.rows.filter(r => !r.isPlanned).length} дни с курс
+      (${formatEUR(summary.grossMonthlySalary)} + ${formatEUR(summary.totalTurnover)} × 0,3%) × ${summary.netCoefficient}<br>
+      Брутна част/ден: ${formatEUR(summary.grossMonthlySalary)} ÷ ${summary.workedDays || '—'} дни с курс = ${formatEUR(summary.dailyRate)}/ден
     </p>`;
 }
