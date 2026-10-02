@@ -41,17 +41,19 @@ function updateSalaryPreview() {
     preview.textContent = '';
     return;
   }
-  const coef = Number.isFinite(netCoef) && netCoef > 0 ? netCoef : 0.78;
+  const coef = Number.isFinite(netCoef) && netCoef > 0 ? netCoef : 0.773;
   const data = loadData();
   const now = new Date();
   const summary = calcMonthSummary(data.days, now.getFullYear(), now.getMonth(), {
     grossMonthlySalary: gross,
     bonusRate: 0.003,
+    bonusVatDivisor: 1.2,
     netCoefficient: coef
   });
-  const net = calcMonthlyNetPayout(gross, summary.totalTurnover, 0.003, coef);
+  const net = calcMonthlyNetPayout(gross, summary.totalTurnover, 0.003, coef, 1.2);
+  const cleanBonus = summary.totalBonus;
   preview.textContent =
-    `Този месец (без бъдещи дни): (${gross.toFixed(0)} + ${summary.totalTurnover.toFixed(2)} × 0.003) × ${coef} ≈ ${net.toFixed(2)} € нето`;
+    `Този месец: (${gross.toFixed(0)} + ${cleanBonus.toFixed(2)} чист бонус) × ${coef} ≈ ${net.toFixed(2)} € нето`;
 }
 
 function openModal() {
@@ -84,6 +86,7 @@ async function handleSave(e) {
     await updateSettings({
       grossMonthlySalary,
       bonusRate: 0.003,
+      bonusVatDivisor: 1.2,
       netCoefficient
     });
     closeModal();

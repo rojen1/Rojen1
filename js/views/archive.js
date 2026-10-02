@@ -178,7 +178,7 @@ function openDayDetail(dateKey) {
       <p class="font-bold text-navy">${formatEUR(summary.turnover)}</p>
     </div>
     <div class="bg-cream rounded-xl p-3 border border-navy/5">
-      <p class="text-xs text-slate-500">Бонус</p>
+      <p class="text-xs text-slate-500">Бонус (след ÷1,2)</p>
       <p class="font-semibold text-accent-amber">${formatEUR(summary.bonus)}</p>
     </div>
     <div class="bg-cream rounded-xl p-3 border border-navy/5">
@@ -327,7 +327,7 @@ function renderSummaryCards(summary) {
       <p class="text-lg font-bold text-navy">${formatEUR(summary.totalTurnover)}</p>
     </div>
     <div class="bg-white rounded-xl shadow-card p-3 border border-navy/5">
-      <p class="text-xs text-slate-500">Общ бонус</p>
+      <p class="text-xs text-slate-500">Общ бонус (чист)</p>
       <p class="text-lg font-bold text-accent-amber">${formatEUR(summary.totalBonus)}</p>
     </div>
     <div class="bg-white rounded-xl shadow-card p-3 border border-navy/5">
@@ -352,7 +352,8 @@ function renderPayoutBanner(summary) {
       </div>
     </div>
     <p class="text-white/60 text-xs mt-2">
-      (${formatEUR(summary.grossMonthlySalary)} + ${formatEUR(summary.totalTurnover)} × 0,3%) × ${summary.netCoefficient}<br>
+      (${formatEUR(summary.grossMonthlySalary)} + ${formatEUR(summary.totalBonus)} бонус) × ${summary.netCoefficient}<br>
+      Оборот × 0,3% ÷ ${summary.bonusVatDivisor} = чист бонус<br>
       Брутна част/ден: ${formatEUR(summary.grossMonthlySalary)} ÷ ${summary.workedDays || '—'} дни с курс = ${formatEUR(summary.dailyRate)}/ден
     </p>`;
 }

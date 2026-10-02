@@ -1,5 +1,5 @@
 /**
- * Salary & turnover — брутна заплата + бонус 0.3%, после нето × коефициент (≈0.78).
+ * Salary & turnover — брутна заплата + чист бонус (0.3% оборот ÷ 1.2), после нето × коефициент (≈0.773).
  */
 
 /** @param {import('./storage.js').Delivery[]} deliveries */
@@ -13,14 +13,43 @@ export function calcDailyTurnover(deliveries) {
   return getDeliveredDeliveries(deliveries).reduce((sum, d) => sum + d.amount, 0);
 }
 
-/** Бонус = оборот × bonusRate (0.003 = 0.3%) */
-export function calcBonus(turnover, bonusRate) {
-  return turnover * bonusRate;
+/** Брутен бонус преди ДДС: оборот × bonusRate (0.003 = 0.3%) */
+export function calcBonusGross(turnover, bonusRate) {
+  return Number(turnover) * Number(bonusRate);
 }
 
-/** @param {number} grossMonthlySalary @param {number} totalTurnover @param {number} bonusRate @param {number} netCoefficient */
-export function calcMonthlyNetPayout(grossMonthlySalary, totalTurnover, bonusRate, netCoefficient) {
-  const gross = Number(grossMonthlySalary) + Number(totalTurnover) * Number(bonusRate);
+/** Чист бонус след ДДС/данък върху бонуса (÷ 1.2) */
+export function calcBonus(turnover, bonusRate, bonusVatDivisor = 1.2) {
+  const divisor = Number(bonusVatDivisor);
+  if (!Number.isFinite(divisor) || divisor <= 0) return calcBonusGross(turnover, bonusRate);
+  return calcBonusGross(turnover, bonusRate) / divisor;
+}
+
+/** Брутна основа преди крайни удържания: заплата + чист бонус */
+export function calcGrossBeforeNetDeductions(
+  grossMonthlySalary,
+  totalTurnover,
+  bonusRate,
+  bonusVatDivisor = 1.2
+) {
+  const cleanBonus = calcBonus(totalTurnover, bonusRate, bonusVatDivisor);
+  return Number(grossMonthlySalary) + cleanBonus;
+}
+
+/** @param {number} grossMonthlySalary @param {number} totalTurnover @param {number} bonusRate @param {number} netCoefficient @param {number} [bonusVatDivisor] */
+export function calcMonthlyNetPayout(
+  grossMonthlySalary,
+  totalTurnover,
+  bonusRate,
+  netCoefficient,
+  bonusVatDivisor = 1.2
+) {
+  const gross = calcGrossBeforeNetDeductions(
+    grossMonthlySalary,
+    totalTurnover,
+    bonusRate,
+    bonusVatDivisor
+  );
   return gross * Number(netCoefficient);
 }
 
@@ -121,13 +150,19 @@ export function normalizeSettings(raw) {
 
   let netCoefficient = raw?.netCoefficient;
   if (netCoefficient == null || !Number.isFinite(Number(netCoefficient)) || Number(netCoefficient) <= 0) {
-    netCoefficient = 0.78;
+    netCoefficient = 0.773;
+  }
+
+  let bonusVatDivisor = raw?.bonusVatDivisor;
+  if (bonusVatDivisor == null || !Number.isFinite(Number(bonusVatDivisor)) || Number(bonusVatDivisor) <= 0) {
+    bonusVatDivisor = 1.2;
   }
 
   return {
     grossMonthlySalary: Number(grossMonthlySalary),
     bonusRate: Number(bonusRate),
     netCoefficient: Number(netCoefficient),
+    bonusVatDivisor: Number(bonusVatDivisor),
     regions: raw?.regions
   };
 }
@@ -149,13 +184,14 @@ export function grossDailyPortionForDate(settings, dateKey, allDays, deliveries)
 export function calcDaySummary(deliveries, settings, dateKey, allDays) {
   const s = normalizeSettings(settings);
   const turnover = calcDailyTurnover(deliveries);
-  const bonus = calcBonus(turnover, s.bonusRate);
+  const bonusGross = calcBonusGross(turnover, s.bonusRate);
+  const bonus = calcBonus(turnover, s.bonusRate, s.bonusVatDivisor);
   const key = dateKey || todayKey();
   const allowance = grossDailyPortionForDate(s, key, allDays, deliveries);
   const grossTotal = allowance + bonus;
   const total = grossTotal * s.netCoefficient;
 
-  return { turnover, bonus, allowance, grossTotal, total };
+  return { turnover, bonusGross, bonus, allowance, grossTotal, total };
 }
 
 /** Cash collected in delivered stops marked as cash payment. */
@@ -251,7 +287,8 @@ export function calcMonthSummary(allDays, year, month, settings) {
     grossMonthlySalary,
     totalTurnover,
     s.bonusRate,
-    s.netCoefficient
+    s.netCoefficient,
+    s.bonusVatDivisor
   );
 
   return {
@@ -266,7 +303,8 @@ export function calcMonthSummary(allDays, year, month, settings) {
     dailyRate,
     grossMonthlySalary,
     bonusRate: s.bonusRate,
-    netCoefficient: s.netCoefficient
+    netCoefficient: s.netCoefficient,
+    bonusVatDivisor: s.bonusVatDivisor
   };
 }
 

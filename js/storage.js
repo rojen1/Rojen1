@@ -16,12 +16,13 @@ const SESSION_KEY = 'rozhen1_session';
 export const DEFAULT_SETTINGS = normalizeSettings({
   grossMonthlySalary: 940,
   bonusRate: 0.003,
-  netCoefficient: 0.78
+  bonusVatDivisor: 1.2,
+  netCoefficient: 0.773
 });
 
 /** @typedef {{ id: string, clientName: string, amount: number, delivered: boolean, createdAt: string, region?: string, isCash?: boolean, cashReported?: boolean, note?: string, fromWarehouse?: boolean, warehouseOrderId?: string, salesRep?: string }} Delivery */
 /** @typedef {{ deliveries: Delivery[], updatedAt: string }} DayRecord */
-/** @typedef {{ grossMonthlySalary: number, bonusRate: number, netCoefficient: number, regions?: string[] }} Settings */
+/** @typedef {{ grossMonthlySalary: number, bonusRate: number, bonusVatDivisor: number, netCoefficient: number, regions?: string[] }} Settings */
 /** @typedef {{ role: 'admin' | 'driver', username: string, displayName?: string, disabled?: boolean }} UserProfile */
 /** @typedef {{ settings: Settings, days: Record<string, DayRecord>, profile: UserProfile | null }} AppData */
 

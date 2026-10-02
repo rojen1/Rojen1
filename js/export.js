@@ -40,7 +40,7 @@ export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
   const rows = [
     [`Месечен отчет - ${monthLabel}`],
     [],
-    ['Дата', 'Оборот (EUR)', 'Бонус (EUR)', 'Брутна част (EUR)', 'Нето (EUR)']
+    ['Дата', 'Оборот (EUR)', 'Бонус чист (EUR)', 'Брутна част (EUR)', 'Нето (EUR)']
   ];
 
   for (const row of summary.rows) {

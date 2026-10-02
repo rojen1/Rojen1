@@ -275,7 +275,7 @@
                 <span id="sum-turnover" class="font-bold text-navy">0.00 €</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-slate-500">Бонус</span>
+                <span class="text-slate-500">Бонус (÷1,2)</span>
                 <span id="sum-bonus" class="font-semibold text-accent-amber">0.00 €</span>
               </div>
               <div class="flex justify-between">
@@ -283,7 +283,7 @@
                 <span id="sum-allowance" class="font-semibold text-slate-700">0.00 €</span>
               </div>
               <div class="flex justify-between items-center col-span-2 pt-2 mt-1 border-t border-slate-100">
-                <span class="text-slate-600 font-medium">Нето за деня (×0,78)</span>
+                <span class="text-slate-600 font-medium">Нето за деня</span>
                 <span id="sum-total" class="font-bold text-lg text-success">0.00 €</span>
               </div>
               <div class="col-span-2 pt-2">
@@ -536,13 +536,13 @@
             <label for="setting-gross-salary" class="block text-sm font-medium text-slate-600 mb-1">Месечна брутна заплата (€)</label>
             <input type="number" id="setting-gross-salary" min="0" step="0.01" required
               class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 text-sm">
-            <p class="text-xs text-slate-400 mt-1">Бонус: 0,3% от месечния оборот. Нето = (брутна заплата + бонус) × коефициент.</p>
+            <p class="text-xs text-slate-400 mt-1">Бонус: оборот × 0,3%, после ÷ 1,2 (ДДС). Нето = (брутна заплата + чист бонус) × коефициент.</p>
           </div>
           <div>
             <label for="setting-net-coef" class="block text-sm font-medium text-slate-600 mb-1">Коефициент нето (удържания)</label>
             <input type="number" id="setting-net-coef" min="0.01" max="1" step="0.01" required
               class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-cream/50 focus:outline-none focus:ring-2 focus:ring-navy/30 text-sm">
-            <p class="text-xs text-slate-400 mt-1">По подразбиране 0,78 (~22% удържания).</p>
+            <p class="text-xs text-slate-400 mt-1">По подразбиране 0,773 (~22,7% осигуровки и данък).</p>
             <p id="setting-daily-preview" class="text-xs text-navy font-medium mt-2"></p>
           </div>
           <div class="pt-2 space-y-3">
