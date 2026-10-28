@@ -191,10 +191,12 @@ export function calcDaySummary(deliveries, settings, dateKey, allDays) {
   const bonusNet = bonus * s.netCoefficient;
   const key = dateKey || todayKey();
   const allowance = grossDailyPortionForDate(s, key, allDays, deliveries);
+  const allowanceNet = allowance * s.netCoefficient;
   const grossTotal = allowance + bonus;
-  const total = grossTotal * s.netCoefficient;
+  /** Дневно нето = нетна основа + нетен бонус (редовете в обобщението се събират) */
+  const total = allowanceNet + bonusNet;
 
-  return { turnover, bonusGross, bonus, bonusNet, allowance, grossTotal, total };
+  return { turnover, bonusGross, bonus, bonusNet, allowance, allowanceNet, grossTotal, total };
 }
 
 /** Cash collected in delivered stops marked as cash payment. */

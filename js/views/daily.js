@@ -558,7 +558,7 @@ function renderDeliveryCard(d) {
 function updateSummaryBar(summary) {
   document.getElementById('sum-turnover').textContent = formatEUR(summary.turnover);
   document.getElementById('sum-bonus').textContent = formatEUR(summary.bonusNet);
-  document.getElementById('sum-allowance').textContent = formatEUR(summary.allowance);
+  document.getElementById('sum-allowance').textContent = formatEUR(summary.allowanceNet);
   document.getElementById('sum-total').textContent = formatEUR(summary.total);
 }
 
