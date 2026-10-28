@@ -185,13 +185,16 @@ export function calcDaySummary(deliveries, settings, dateKey, allDays) {
   const s = normalizeSettings(settings);
   const turnover = calcDailyTurnover(deliveries);
   const bonusGross = calcBonusGross(turnover, s.bonusRate);
+  /** След ÷1.2 (ДДС върху бонуса) — за месечни отчети */
   const bonus = calcBonus(turnover, s.bonusRate, s.bonusVatDivisor);
+  /** Бонус след крайни удържания — за дневно обобщение */
+  const bonusNet = bonus * s.netCoefficient;
   const key = dateKey || todayKey();
   const allowance = grossDailyPortionForDate(s, key, allDays, deliveries);
   const grossTotal = allowance + bonus;
   const total = grossTotal * s.netCoefficient;
 
-  return { turnover, bonusGross, bonus, allowance, grossTotal, total };
+  return { turnover, bonusGross, bonus, bonusNet, allowance, grossTotal, total };
 }
 
 /** Cash collected in delivered stops marked as cash payment. */
