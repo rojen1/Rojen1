@@ -313,7 +313,7 @@ async function handleExportMonth() {
   const monthLabel = formatMonthLabel(currentYear, currentMonth);
   try {
     await exportMonthCsv(data.days, currentYear, currentMonth, data.settings, monthLabel);
-    showExportToast('Готово. Избери Excel или запази файла (.xls).');
+    showExportToast('Готово. Файл .xlsx — отвори с Excel.');
   } catch (err) {
     showExportToast(err?.message || 'Грешка при експорт.');
   }

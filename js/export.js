@@ -1,19 +1,10 @@
 import { calcMonthSummary, formatShortDate, getMonthDayKeys } from './calculations.js';
 import { normalizeDeliveries } from './storage.js';
 
-/** @param {string} s */
-function escapeHtml(s) {
-  return String(s ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 /** @param {number} amount */
-function formatExportAmount(amount) {
+function exportNumber(amount) {
   if (amount == null || !Number.isFinite(Number(amount))) return '';
-  return Number(amount).toFixed(2).replace('.', ',');
+  return Math.round(Number(amount) * 100) / 100;
 }
 
 /**
@@ -22,12 +13,12 @@ function formatExportAmount(amount) {
  * @param {number} month
  * @param {import('./storage.js').Settings} settings
  * @param {string} monthLabel
- * @returns {string[][]}
+ * @returns {(string | number)[][]}
  */
 function buildMonthExportRows(allDays, year, month, settings, monthLabel) {
   const summary = calcMonthSummary(allDays, year, month, settings);
 
-  /** @type {string[][]} */
+  /** @type {(string | number)[][]} */
   const rows = [
     [`Месечен отчет - ${monthLabel}`],
     [],
@@ -37,20 +28,20 @@ function buildMonthExportRows(allDays, year, month, settings, monthLabel) {
   for (const row of summary.rows) {
     rows.push([
       formatShortDate(row.dateKey),
-      row.isPlanned ? formatExportAmount(row.plannedTurnover) : formatExportAmount(row.turnover),
-      row.isPlanned ? '' : formatExportAmount(row.bonus),
-      row.isPlanned ? '' : formatExportAmount(row.allowance),
-      row.isPlanned ? '' : formatExportAmount(row.total)
+      row.isPlanned ? exportNumber(row.plannedTurnover) : exportNumber(row.turnover),
+      row.isPlanned ? '' : exportNumber(row.bonus),
+      row.isPlanned ? '' : exportNumber(row.allowance),
+      row.isPlanned ? '' : exportNumber(row.total)
     ]);
   }
 
   rows.push([]);
   rows.push([
     'ОБЩО',
-    formatExportAmount(summary.totalTurnover),
-    formatExportAmount(summary.totalBonus),
-    formatExportAmount(summary.totalAllowance),
-    formatExportAmount(summary.finalPayout)
+    exportNumber(summary.totalTurnover),
+    exportNumber(summary.totalBonus),
+    exportNumber(summary.totalAllowance),
+    exportNumber(summary.finalPayout)
   ]);
   rows.push([]);
   rows.push(['Детайли по спирки']);
@@ -65,7 +56,7 @@ function buildMonthExportRows(allDays, year, month, settings, monthLabel) {
         formatShortDate(dateKey),
         d.clientName || '',
         d.region || '',
-        formatExportAmount(d.amount ?? 0),
+        exportNumber(d.amount ?? 0),
         d.delivered ? 'Да' : 'Не',
         d.isCash ? 'Брой' : 'Банка',
         d.note || ''
@@ -74,32 +65,6 @@ function buildMonthExportRows(allDays, year, month, settings, monthLabel) {
   }
 
   return rows;
-}
-
-/** HTML table as .xls — отваря се в Excel на телефон без „corrupted file“ */
-/** @param {string[][]} rows */
-function rowsToExcelHtml(rows) {
-  const tableRows = rows.map(row => {
-    if (!row.length) {
-      return '<tr><td colspan="7">&nbsp;</td></tr>';
-    }
-    return (
-      '<tr>' +
-      row.map(cell => `<td>${escapeHtml(cell)}</td>`).join('') +
-      '</tr>'
-    );
-  }).join('');
-
-  return (
-    '\uFEFF' +
-    '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
-    'xmlns:x="urn:schemas-microsoft-com:office:excel">' +
-    '<head><meta charset="utf-8">' +
-    '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' +
-    '</head><body><table border="1" cellspacing="0" cellpadding="4">' +
-    tableRows +
-    '</table></body></html>'
-  );
 }
 
 /** @param {string} filename @param {Blob} blob */
@@ -128,6 +93,15 @@ async function deliverDownload(filename, blob) {
   setTimeout(() => URL.revokeObjectURL(url), 120_000);
 }
 
+let xlsxModulePromise = null;
+
+function loadXlsx() {
+  if (!xlsxModulePromise) {
+    xlsxModulePromise = import('./vendor/xlsx.mjs');
+  }
+  return xlsxModulePromise;
+}
+
 /**
  * @param {Record<string, import('./storage.js').DayRecord>} allDays
  * @param {number} year
@@ -136,10 +110,18 @@ async function deliverDownload(filename, blob) {
  * @param {string} monthLabel
  */
 export async function exportMonthCsv(allDays, year, month, settings, monthLabel) {
+  const XLSX = await loadXlsx();
   const rows = buildMonthExportRows(allDays, year, month, settings, monthLabel);
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Mesec');
+
   const monthNum = String(month + 1).padStart(2, '0');
-  const filename = `rozhen1-${year}-${monthNum}.xls`;
-  const html = rowsToExcelHtml(rows);
-  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const filename = `rozhen1-${year}-${monthNum}.xlsx`;
+
+  const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
   await deliverDownload(filename, blob);
 }
