@@ -97,6 +97,22 @@ export function renderArchiveView() {
   renderPayoutBanner(summary);
 }
 
+function formatArchiveBonusCell(row, summary) {
+  const net = row.bonusNet ?? row.bonus * summary.netCoefficient;
+  return (
+    `<span class="block">${formatEUR(row.bonus)}</span>` +
+    `<span class="block text-[11px] text-slate-500 font-normal">(${formatEUR(net)} нето)</span>`
+  );
+}
+
+function formatArchiveBonusFoot(summary) {
+  const net = summary.totalBonusNet ?? summary.totalBonus * summary.netCoefficient;
+  return (
+    `<span class="block">${formatEUR(summary.totalBonus)}</span>` +
+    `<span class="block text-[10px] text-slate-500 font-normal">(${formatEUR(net)} нето)</span>`
+  );
+}
+
 function renderTable(rows, summary) {
   const tbody = document.getElementById('archive-table-body');
   const tfoot = document.getElementById('archive-table-foot');
@@ -123,7 +139,7 @@ function renderTable(rows, summary) {
       data-date-key="${row.dateKey}" aria-label="Детайли за ${formatShortDate(row.dateKey)}">
       <td class="py-2.5 px-3 font-medium text-navy">${dateLabel}</td>
       <td class="py-2.5 px-2 text-right">${formatEUR(turnover)}</td>
-      <td class="py-2.5 px-2 text-right text-accent-amber">${row.isPlanned ? '—' : formatEUR(row.bonus)}</td>
+      <td class="py-2.5 px-2 text-right text-accent-amber">${row.isPlanned ? '—' : formatArchiveBonusCell(row, summary)}</td>
       <td class="py-2.5 px-2 text-right">${row.isPlanned ? '—' : formatEUR(row.allowance)}</td>
       <td class="py-2.5 px-3 text-right font-semibold ${row.isPlanned ? 'text-navy' : 'text-success-dark'}">${row.isPlanned ? `${row.stopCount} сп.` : formatEUR(row.total)}</td>
     </tr>`;
@@ -133,7 +149,7 @@ function renderTable(rows, summary) {
     <tr class="bg-navy/5 font-bold text-navy text-xs">
       <td class="py-3 px-3">ОБЩО</td>
       <td class="py-3 px-2 text-right">${formatEUR(summary.totalTurnover)}</td>
-      <td class="py-3 px-2 text-right">${formatEUR(summary.totalBonus)}</td>
+      <td class="py-3 px-2 text-right">${formatArchiveBonusFoot(summary)}</td>
       <td class="py-3 px-2 text-right">${formatEUR(summary.totalAllowance)}</td>
       <td class="py-3 px-3 text-right text-success-dark">${formatEUR(summary.finalPayout)}</td>
     </tr>`;
