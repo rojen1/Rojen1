@@ -312,7 +312,7 @@ function handleExportMonth() {
   const data = loadData();
   const monthLabel = formatMonthLabel(currentYear, currentMonth);
   exportMonthCsv(data.days, currentYear, currentMonth, data.settings, monthLabel);
-  showExportToast('Файлът е изтеглен. Отворете го с Excel.');
+  showExportToast('Файлът е изтеглен (CSV). Отвори от „Файлове“ или сподели с Excel.');
 }
 
 function showExportToast(message) {

@@ -4,26 +4,39 @@ import { normalizeDeliveries } from './storage.js';
 /** @param {string} value */
 function csvCell(value) {
   const text = String(value ?? '');
-  if (/[",;\n]/.test(text)) {
+  if (/[",;\n\r]/.test(text)) {
     return `"${text.replace(/"/g, '""')}"`;
   }
   return text;
 }
 
+/** Числа с десетична запетая — Excel (BG) ги разпознава по-надеждно */
+/** @param {number} amount */
+function formatExportAmount(amount) {
+  if (amount == null || !Number.isFinite(Number(amount))) return '';
+  return Number(amount).toFixed(2).replace('.', ',');
+}
+
 /** @param {string[][]} rows */
 function rowsToCsv(rows) {
-  return '\uFEFF' + rows.map(row => row.map(csvCell).join(';')).join('\n');
+  const body = rows.map(row => row.map(csvCell).join(';')).join('\r\n');
+  return `\uFEFFsep=;\r\n${body}`;
 }
 
 /** @param {string} filename @param {string} content */
 export function downloadTextFile(filename, content) {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+  const blob = new Blob([content], {
+    type: 'application/vnd.ms-excel;charset=utf-8'
+  });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
+  link.rel = 'noopener';
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 /**
@@ -46,20 +59,20 @@ export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
   for (const row of summary.rows) {
     rows.push([
       formatShortDate(row.dateKey),
-      row.isPlanned ? String(row.plannedTurnover) : String(row.turnover),
-      row.isPlanned ? '' : String(row.bonus),
-      row.isPlanned ? '' : String(row.allowance),
-      row.isPlanned ? `${row.stopCount} сп.` : String(row.total)
+      row.isPlanned ? formatExportAmount(row.plannedTurnover) : formatExportAmount(row.turnover),
+      row.isPlanned ? '' : formatExportAmount(row.bonus),
+      row.isPlanned ? '' : formatExportAmount(row.allowance),
+      row.isPlanned ? '' : formatExportAmount(row.total)
     ]);
   }
 
   rows.push([]);
   rows.push([
     'ОБЩО',
-    String(summary.totalTurnover),
-    String(summary.totalBonus),
-    String(summary.totalAllowance),
-    String(summary.finalPayout)
+    formatExportAmount(summary.totalTurnover),
+    formatExportAmount(summary.totalBonus),
+    formatExportAmount(summary.totalAllowance),
+    formatExportAmount(summary.finalPayout)
   ]);
   rows.push([]);
   rows.push(['Детайли по спирки']);
@@ -74,7 +87,7 @@ export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
         formatShortDate(dateKey),
         d.clientName || '',
         d.region || '',
-        String(d.amount ?? 0),
+        formatExportAmount(d.amount ?? 0),
         d.delivered ? 'Да' : 'Не',
         d.isCash ? 'Брой' : 'Банка',
         d.note || ''
@@ -82,6 +95,7 @@ export function exportMonthCsv(allDays, year, month, settings, monthLabel) {
     }
   }
 
-  const safeLabel = monthLabel.replace(/\s+/g, '-').toLowerCase();
-  downloadTextFile(`rojen1-${safeLabel}.csv`, rowsToCsv(rows));
+  const monthNum = String(month + 1).padStart(2, '0');
+  const filename = `rozhen1-${year}-${monthNum}.csv`;
+  downloadTextFile(filename, rowsToCsv(rows));
 }
