@@ -288,6 +288,7 @@ export function calcMonthSummary(allDays, year, month, settings) {
   const workedDays = countWorkedDaysInMonth(allDays, year, month);
   const dailyRate = calcGrossDailyPortion(grossMonthlySalary, allDays, year, month);
   const totalGross = grossMonthlySalary + totalBonus;
+  const totalBonusNet = totalBonus * s.netCoefficient;
   const finalPayout = calcMonthlyNetPayout(
     grossMonthlySalary,
     totalTurnover,
@@ -300,6 +301,7 @@ export function calcMonthSummary(allDays, year, month, settings) {
     rows,
     totalTurnover,
     totalBonus,
+    totalBonusNet,
     totalAllowance,
     totalDaily,
     totalGross,

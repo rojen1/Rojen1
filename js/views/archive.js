@@ -328,7 +328,13 @@ function renderSummaryCards(summary) {
     </div>
     <div class="bg-white rounded-xl shadow-card p-3 border border-navy/5">
       <p class="text-xs text-slate-500">Общ бонус (чист)</p>
+      <p class="text-xs text-slate-400">след ÷1,2 (ДДС)</p>
       <p class="text-lg font-bold text-accent-amber">${formatEUR(summary.totalBonus)}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-card p-3 border border-navy/5">
+      <p class="text-xs text-slate-500">Бонус (нето)</p>
+      <p class="text-xs text-slate-400">× ${summary.netCoefficient} удържания</p>
+      <p class="text-lg font-bold text-accent-amber">${formatEUR(summary.totalBonusNet)}</p>
     </div>
     <div class="bg-white rounded-xl shadow-card p-3 border border-navy/5">
       <p class="text-xs text-slate-500">Брутно общо</p>
