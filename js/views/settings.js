@@ -79,8 +79,14 @@ async function handleSave(e) {
   const grossMonthlySalary = parseFloat(document.getElementById('setting-gross-salary').value);
   const netCoefficient = parseFloat(document.getElementById('setting-net-coef').value);
 
-  if ([grossMonthlySalary, netCoefficient].some(v => isNaN(v) || v < 0)) return;
-  if (grossMonthlySalary <= 0 || netCoefficient <= 0 || netCoefficient > 1) return;
+  if ([grossMonthlySalary, netCoefficient].some(v => isNaN(v) || v < 0)) {
+    showToast('Проверете въведените суми и коефициента.');
+    return;
+  }
+  if (grossMonthlySalary <= 0 || netCoefficient <= 0 || netCoefficient > 1) {
+    showToast('Заплата и коефициентът трябва да са между 0 и 1 (за коеф.).');
+    return;
+  }
 
   try {
     await updateSettings({
