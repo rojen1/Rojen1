@@ -308,11 +308,15 @@ function parseAmountInput(raw) {
   return Number.isFinite(amount) && amount >= 0 ? amount : null;
 }
 
-function handleExportMonth() {
+async function handleExportMonth() {
   const data = loadData();
   const monthLabel = formatMonthLabel(currentYear, currentMonth);
-  exportMonthCsv(data.days, currentYear, currentMonth, data.settings, monthLabel);
-  showExportToast('Файлът е изтеглен (CSV). Отвори от „Файлове“ или сподели с Excel.');
+  try {
+    await exportMonthCsv(data.days, currentYear, currentMonth, data.settings, monthLabel);
+    showExportToast('Готово. Избери Excel или запази файла (.xls).');
+  } catch (err) {
+    showExportToast(err?.message || 'Грешка при експорт.');
+  }
 }
 
 function showExportToast(message) {
