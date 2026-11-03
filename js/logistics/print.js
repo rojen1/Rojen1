@@ -49,46 +49,8 @@ function vendorTotals(receipts, match) {
   return { liters, sum };
 }
 
-/** @param {import('./storage.js').LogisticsReport} report */
-export function buildPrintDocumentHtml(report) {
-  const totalKm = calcTotalKm(report.odometerStart, report.odometerEnd);
-  const totalLiters = sumReceiptLiters(report.receipts);
-  const totalAmount = sumReceiptAmount(report.receipts);
-  const avg = calcAvgConsumptionPer100(totalLiters, totalKm);
-  const receipts = report.receipts || [];
-
-  const omv = vendorTotals(receipts, 'omv');
-  const shellOnly = vendorTotals(receipts, 'shell');
-  const shellLiters = shellOnly.liters > 0 ? shellOnly.liters : totalLiters;
-  const shellSum = shellOnly.sum > 0 ? shellOnly.sum : totalAmount;
-
-  const reportNo = report.reportNo || '';
-  const reportDate = report.reportDate || formatDateBgFull(new Date().toISOString().slice(0, 10));
-  const orderNo = report.orderNo || '1';
-
-  const dataRows = receipts
-    .map(
-      r => `<tr>
-        <td>${escapeHtml(r.vendor)}</td>
-        <td class="c">${formatDateDm(r.date)}</td>
-        <td class="r">${fmtDec(r.liters, 3)}</td>
-        <td class="r">${fmtDec(r.unitPrice, 2)}</td>
-        <td class="r">${fmtDec(r.total, 2)}</td>
-      </tr>`
-    )
-    .join('');
-
-  const emptyRowCount = Math.max(0, Math.min(5, 9 - receipts.length));
-  const emptyRows = Array.from({ length: emptyRowCount })
-    .map(() => '<tr class="fuel-empty"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>')
-    .join('');
-
-  return `<!DOCTYPE html>
-<html lang="bg">
-<head>
-<meta charset="utf-8">
-<title>ОТЧЕТ-ПРОТОКОЛ ${escapeHtml(report.plate)}</title>
-<style>
+function getPrintStyles() {
+  return `
   @page { size: A4 portrait; margin: 10mm; }
   * { box-sizing: border-box; }
   html, body {
@@ -224,11 +186,44 @@ export function buildPrintDocumentHtml(report) {
       page-break-inside: avoid;
       page-break-after: avoid;
     }
-  }
-</style>
-</head>
-<body>
-<div class="sheet">
+  }`;
+}
+
+/** @param {import('./storage.js').LogisticsReport} report */
+function buildPrintSheetHtml(report) {
+  const totalKm = calcTotalKm(report.odometerStart, report.odometerEnd);
+  const totalLiters = sumReceiptLiters(report.receipts);
+  const totalAmount = sumReceiptAmount(report.receipts);
+  const avg = calcAvgConsumptionPer100(totalLiters, totalKm);
+  const receipts = report.receipts || [];
+
+  const omv = vendorTotals(receipts, 'omv');
+  const shellOnly = vendorTotals(receipts, 'shell');
+  const shellLiters = shellOnly.liters > 0 ? shellOnly.liters : totalLiters;
+  const shellSum = shellOnly.sum > 0 ? shellOnly.sum : totalAmount;
+
+  const reportNo = report.reportNo || '';
+  const reportDate = report.reportDate || formatDateBgFull(new Date().toISOString().slice(0, 10));
+  const orderNo = report.orderNo || '1';
+
+  const dataRows = receipts
+    .map(
+      r => `<tr>
+        <td>${escapeHtml(r.vendor)}</td>
+        <td class="c">${formatDateDm(r.date)}</td>
+        <td class="r">${fmtDec(r.liters, 3)}</td>
+        <td class="r">${fmtDec(r.unitPrice, 2)}</td>
+        <td class="r">${fmtDec(r.total, 2)}</td>
+      </tr>`
+    )
+    .join('');
+
+  const emptyRowCount = Math.max(0, Math.min(5, 9 - receipts.length));
+  const emptyRows = Array.from({ length: emptyRowCount })
+    .map(() => '<tr class="fuel-empty"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>')
+    .join('');
+
+  return `<div class="sheet">
   <div class="title-box">ОТЧЕТ - ПРОТОКОЛ</div>
 
   <div class="top-row">
@@ -322,10 +317,81 @@ export function buildPrintDocumentHtml(report) {
       <td><span class="sig-dots">................................</span> /подпис/</td>
     </tr>
   </table>
-</div>
+</div>`;
+}
+
+/** @param {import('./storage.js').LogisticsReport} report */
+export function buildPrintDocumentHtml(report) {
+  return `<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<title>ОТЧЕТ-ПРОТОКОЛ ${escapeHtml(report.plate)}</title>
+<style>${getPrintStyles()}</style>
+</head>
+<body>
+${buildPrintSheetHtml(report)}
 <script>window.onload=function(){window.focus();window.print();};</script>
 </body>
 </html>`;
+}
+
+const PRINT_SKIP_ATTR = 'data-logistics-print-skip';
+
+function hideNonPrintBodyChildren() {
+  for (const child of document.body.children) {
+    if (child.id === 'logistics-print-host') continue;
+    if (child.tagName === 'SCRIPT') continue;
+    child.setAttribute(PRINT_SKIP_ATTR, '1');
+    child.style.setProperty('display', 'none', 'important');
+  }
+}
+
+function restoreNonPrintBodyChildren() {
+  for (const el of document.querySelectorAll(`[${PRINT_SKIP_ATTR}="1"]`)) {
+    el.removeAttribute(PRINT_SKIP_ATTR);
+    el.style.removeProperty('display');
+  }
+}
+
+function teardownPrintHost() {
+  document.body.classList.remove('logistics-print-active');
+  document.documentElement.classList.remove('logistics-print-active');
+  restoreNonPrintBodyChildren();
+  const host = document.getElementById('logistics-print-host');
+  if (host) {
+    host.hidden = true;
+    host.setAttribute('aria-hidden', 'true');
+    host.innerHTML = '';
+  }
+}
+
+function mountPrintHost(report) {
+  const host = document.getElementById('logistics-print-host');
+  if (!host) throw new Error('Липсва елемент за печат.');
+  host.className = 'logistics-print-host print-container';
+  host.innerHTML = `<style>${getPrintStyles()}</style>${buildPrintSheetHtml(report)}`;
+  host.hidden = false;
+  host.removeAttribute('aria-hidden');
+}
+
+/** Същият шаблон, in-page — без pop-up (не блокира PWA). */
+/** @param {import('./storage.js').LogisticsReport} report */
+export function printReport(report) {
+  mountPrintHost(report);
+  document.documentElement.classList.add('logistics-print-active');
+  document.body.classList.add('logistics-print-active');
+  hideNonPrintBodyChildren();
+
+  const cleanup = () => {
+    teardownPrintHost();
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
+  setTimeout(() => {
+    if (document.body.classList.contains('logistics-print-active')) cleanup();
+  }, 1500);
 }
 
 /** @param {string} s */
@@ -339,12 +405,5 @@ function escapeHtml(s) {
 
 /** @param {import('./storage.js').LogisticsReport} report */
 export function openPrintPreview(report) {
-  const html = buildPrintDocumentHtml(report);
-  const win = window.open('', '_blank');
-  if (!win) {
-    throw new Error('Блокиран pop-up. Разрешете прозорци за печат.');
-  }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  printReport(report);
 }
