@@ -49,90 +49,8 @@ function vendorTotals(receipts, match) {
   return { liters, sum };
 }
 
-function getPrintStyles() {
-  return `
-  @page { size: A4 portrait; margin: 10mm; }
-  .logistics-print-host {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 8.5pt;
-    line-height: 1.12;
-    color: #000;
-    background: #fff;
-  }
-  .logistics-print-host .sheet { max-width: 190mm; margin: 0 auto; }
-  .logistics-print-host .title-box {
-    text-align: center; font-weight: bold; font-size: 10.5pt;
-    border: 1px solid #000; padding: 1mm 2mm; margin-bottom: 1.5mm;
-  }
-  .logistics-print-host .field {
-    display: inline-block; min-width: 14mm; border: 1px solid #000;
-    background: #fff; padding: 0.1mm 1.2mm; font-weight: 600; vertical-align: baseline;
-  }
-  .logistics-print-host .field.wide { min-width: 46mm; }
-  .logistics-print-host .field.km { min-width: 16mm; text-align: center; }
-  .logistics-print-host .field.num { min-width: 12mm; text-align: right; }
-  .logistics-print-host .top-row { margin-bottom: 0.8mm; }
-  .logistics-print-host .line { margin: 0.5mm 0; }
-  .logistics-print-host .legal { font-size: 8pt; margin: 1mm 0 1.5mm; line-height: 1.15; }
-  .logistics-print-host ol.main { margin: 0 0 1mm 4mm; padding: 0 0 0 4mm; }
-  .logistics-print-host ol.main li { margin-bottom: 0.5mm; }
-  .logistics-print-host .para3 { margin: 0.8mm 0 1.5mm; font-size: 8.5pt; line-height: 1.15; }
-  .logistics-print-host table.summary {
-    width: 74%; margin-left: auto; margin-bottom: 1.5mm;
-    border-collapse: collapse; font-size: 8pt;
-  }
-  .logistics-print-host table.summary td {
-    border: 1px solid #000; padding: 0.4mm 1.2mm; background: #fff;
-  }
-  .logistics-print-host table.summary td.label { text-align: left; font-weight: bold; width: 70%; }
-  .logistics-print-host table.summary td.val { text-align: right; font-weight: 600; width: 30%; }
-  .logistics-print-host .table-title {
-    text-align: center; font-weight: bold; margin: 1mm 0 0.8mm; font-size: 8.5pt;
-  }
-  .logistics-print-host table.fuel,
-  .logistics-print-host table.vendor-totals {
-    width: 100%; border-collapse: collapse; font-size: 8pt;
-  }
-  .logistics-print-host table.fuel { margin-bottom: 1mm; }
-  .logistics-print-host table.fuel th,
-  .logistics-print-host table.fuel td,
-  .logistics-print-host table.vendor-totals th,
-  .logistics-print-host table.vendor-totals td {
-    border: 1px solid #000; padding: 0.35mm 1mm; background: #fff; line-height: 1.08;
-  }
-  .logistics-print-host table.fuel th,
-  .logistics-print-host table.vendor-totals th { font-weight: bold; text-align: center; }
-  .logistics-print-host table.fuel td.r,
-  .logistics-print-host table.vendor-totals td.r { text-align: right; }
-  .logistics-print-host table.fuel td.c { text-align: center; }
-  .logistics-print-host table.vendor-totals {
-    width: 42%; margin-left: auto; margin-bottom: 2mm;
-  }
-  .logistics-print-host .signatures {
-    width: 56%; margin-left: auto; font-size: 8.5pt; border-collapse: collapse;
-  }
-  .logistics-print-host .signatures td { padding: 0.6mm 0; vertical-align: bottom; }
-  .logistics-print-host .sig-dots { letter-spacing: 0.1em; }
-  @media print {
-    body.logistics-print-active * { visibility: hidden !important; }
-    body.logistics-print-active .logistics-print-host,
-    body.logistics-print-active .logistics-print-host * {
-      visibility: visible !important;
-    }
-    body.logistics-print-active .logistics-print-host {
-      display: block !important;
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-  }`;
-}
-
 /** @param {import('./storage.js').LogisticsReport} report */
-function buildPrintSheetHtml(report) {
+export function buildPrintDocumentHtml(report) {
   const totalKm = calcTotalKm(report.odometerStart, report.odometerEnd);
   const totalLiters = sumReceiptLiters(report.receipts);
   const totalAmount = sumReceiptAmount(report.receipts);
@@ -160,39 +78,193 @@ function buildPrintSheetHtml(report) {
     )
     .join('');
 
-  const fuelBody = dataRows || '<tr><td colspan="5">&nbsp;</td></tr>';
+  const emptyRowCount = Math.max(0, Math.min(5, 9 - receipts.length));
+  const emptyRows = Array.from({ length: emptyRowCount })
+    .map(() => '<tr class="fuel-empty"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>')
+    .join('');
 
-  return `<div class="sheet">
+  return `<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<title>ОТЧЕТ-ПРОТОКОЛ ${escapeHtml(report.plate)}</title>
+<style>
+  @page { size: A4 portrait; margin: 10mm; }
+  * { box-sizing: border-box; }
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    color: #000;
+    line-height: 1.15;
+  }
+  .sheet {
+    width: 190mm;
+    max-height: 277mm;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  .title-box {
+    text-align: center;
+    font-weight: bold;
+    font-size: 11pt;
+    border: 1px solid #000;
+    padding: 1.5mm 2mm;
+    margin-bottom: 2mm;
+    letter-spacing: 0.02em;
+  }
+  .shade {
+    display: inline-block;
+    min-width: 16mm;
+    background: #d9d9d9;
+    padding: 0.2mm 1.5mm;
+    border: 1px solid #999;
+    vertical-align: baseline;
+  }
+  .shade.wide { min-width: 48mm; }
+  .shade.km { min-width: 18mm; text-align: center; }
+  .shade.num { min-width: 14mm; text-align: right; }
+  .top-row { margin-bottom: 1mm; }
+  .line { margin: 0.8mm 0; }
+  .legal { font-size: 8.5pt; margin: 1.5mm 0 2mm; line-height: 1.2; }
+  ol.main { margin: 0 0 1.5mm 4mm; padding: 0 0 0 4mm; }
+  ol.main li { margin-bottom: 0.8mm; }
+  .para3 { margin: 1mm 0 2mm 0; font-size: 9pt; line-height: 1.2; }
+  .summary {
+    width: 72%;
+    margin-left: auto;
+    margin-bottom: 2mm;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+  }
+  .summary td {
+    border: 1px solid #000;
+    padding: 0.6mm 1.5mm;
+    vertical-align: middle;
+  }
+  .summary td.label {
+    font-weight: bold;
+    width: 68%;
+  }
+  .summary td.val {
+    width: 32%;
+    background: #d9d9d9;
+    text-align: right;
+    font-weight: bold;
+  }
+  .table-title {
+    text-align: center;
+    font-weight: bold;
+    margin: 1.5mm 0 1mm;
+    font-size: 9pt;
+  }
+  table.fuel {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin-bottom: 1.5mm;
+  }
+  table.fuel th, table.fuel td {
+    border: 1px solid #000;
+    padding: 0.45mm 1.2mm;
+    line-height: 1.1;
+  }
+  table.fuel tr.fuel-empty td {
+    height: 4mm;
+    padding: 0.2mm 1.2mm;
+  }
+  table.fuel th {
+    font-weight: bold;
+    text-align: center;
+    background: #fff;
+  }
+  table.fuel td.r { text-align: right; }
+  table.fuel td.c { text-align: center; }
+  table.vendor-totals {
+    width: 45%;
+    margin-left: auto;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin-bottom: 3mm;
+  }
+  table.vendor-totals td, table.vendor-totals th {
+    border: 1px solid #000;
+    padding: 0.5mm 1.5mm;
+  }
+  table.vendor-totals th { font-weight: bold; text-align: center; }
+  table.vendor-totals td.r { text-align: right; background: #d9d9d9; font-weight: bold; }
+  .signatures {
+    width: 58%;
+    margin-left: auto;
+    font-size: 9pt;
+    border-collapse: collapse;
+  }
+  .signatures td { padding: 1mm 0; vertical-align: bottom; }
+  .sig-dots {
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+  @media print {
+    html, body {
+      width: auto;
+      height: auto;
+    }
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .sheet {
+      max-height: none;
+      overflow: visible;
+      page-break-inside: avoid;
+      page-break-after: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
   <div class="title-box">ОТЧЕТ - ПРОТОКОЛ</div>
+
   <div class="top-row">
-    <span>No :</span> <span class="field">${escapeHtml(reportNo)}</span>
-    &nbsp;&nbsp;
-    <span>Дата:</span> <span class="field">${escapeHtml(reportDate)}</span>
+    <span>No :</span> <span class="shade">${escapeHtml(reportNo)}</span>
+    &nbsp;&nbsp;&nbsp;
+    <span>Дата:</span> <span class="shade">${escapeHtml(reportDate)}</span>
   </div>
-  <p class="line">За разходвано гориво на автомобил рег. №: <span class="field wide">${escapeHtml(report.plate)}</span></p>
-  <p class="line">регион <span class="field wide">${escapeHtml(report.region)}</span></p>
-  <p class="line">от (име) <span class="field wide">${escapeHtml(report.driverName)}</span></p>
+
+  <p class="line">За разходвано гориво на автомобил рег. №: <span class="shade wide">${escapeHtml(report.plate)}</span></p>
+  <p class="line">регион <span class="shade wide">${escapeHtml(report.region)}</span></p>
+  <p class="line">от (име) <span class="shade wide">${escapeHtml(report.driverName)}</span></p>
   <p class="line">
-    за периода от : <span class="field">${formatDateDm(report.periodFrom)}</span>
-    до <span class="field">${formatDateDm(report.periodTo)}</span> г.
+    за периода от : <span class="shade">${formatDateDm(report.periodFrom)}</span>
+    до <span class="shade">${formatDateDm(report.periodTo)}</span> г.
   </p>
+
   <p class="legal">
-    На основание заповед №: <span class="field" style="min-width:7mm">${escapeHtml(orderNo)}</span>
+    На основание заповед №: <span class="shade" style="min-width:8mm">${escapeHtml(orderNo)}</span>
     на Директора на &bdquo;РОЖЕН-1&ldquo; ЕООД се отчитат разходи за горивото на служебен автомобил.
   </p>
+
   <ol class="main">
-    <li>На дата <span class="field">${formatDateDm(report.periodFrom)}</span>
-      километражът показва <span class="field km">${fmtKm(report.odometerStart)}</span> км.</li>
-    <li>Към дата <span class="field">${formatDateDm(report.periodTo)}</span>
-      километражът показва <span class="field km">${fmtKm(report.odometerEnd)}</span> км.</li>
+    <li>На дата <span class="shade">${formatDateDm(report.periodFrom)}</span>
+      километражът показва <span class="shade km">${fmtKm(report.odometerStart)}</span> км.</li>
+    <li>Към дата <span class="shade">${formatDateDm(report.periodTo)}</span>
+      километражът показва <span class="shade km">${fmtKm(report.odometerEnd)}</span> км.</li>
   </ol>
+
   <p class="para3">
-    3. За периода от: <span class="field">${formatDateDm(report.periodFrom)}</span>
-    до <span class="field">${formatDateDm(report.periodTo)}</span>
-    са изминати <span class="field km">${fmtKm(totalKm)}</span> км за служебни цели и е разходвано гориво
-    <span class="field num">${fmtDec(totalLiters, 3)}</span> лт. при норматив
-    <span class="field num">${fmtDec(avg, 2)}</span> лт. / 100 км пробег, по цени както следва:
+    3. За периода от: <span class="shade">${formatDateDm(report.periodFrom)}</span>
+    до <span class="shade">${formatDateDm(report.periodTo)}</span>
+    са изминати <span class="shade km">${fmtKm(totalKm)}</span> км за служебни цели и е разходвано гориво
+    <span class="shade num">${fmtDec(totalLiters, 3)}</span> лт. при норматив
+    <span class="shade num">${fmtDec(avg, 2)}</span> лт. / 100 км пробег, по цени както следва:
   </p>
+
   <table class="summary">
     <tr><td class="label">ОБЩО ИЗМИНАТИ КИЛОМЕТРИ</td><td class="val">${fmtKm(totalKm)}</td></tr>
     <tr><td class="label">ОБЩО РАЗХОДВАНО ГОРИВО</td><td class="val">${fmtDec(totalLiters, 3)}</td></tr>
@@ -201,6 +273,7 @@ function buildPrintSheetHtml(report) {
     <tr><td class="label">СУМА ЗА ОТЧИТАНЕ</td><td class="val">${escapeHtml(report.amountToReport ?? '')}</td></tr>
     <tr><td class="label">НАЛИЧНОСТ</td><td class="val">${escapeHtml(report.cashOnHand ?? '')}</td></tr>
   </table>
+
   <div class="table-title">Подробен опис на заредено гориво (по фактури)</div>
   <table class="fuel">
     <thead>
@@ -212,10 +285,17 @@ function buildPrintSheetHtml(report) {
         <th style="width:22%">Сума</th>
       </tr>
     </thead>
-    <tbody>${fuelBody}</tbody>
+    <tbody>
+      ${dataRows}${emptyRows}
+    </tbody>
   </table>
+
   <table class="vendor-totals">
-    <tr><th></th><th>литри</th><th>сума</th></tr>
+    <tr>
+      <th></th>
+      <th>литри</th>
+      <th>сума</th>
+    </tr>
     <tr>
       <td>Total Shell</td>
       <td class="r">${shellLiters ? fmtDec(shellLiters, 3) : ''}</td>
@@ -227,87 +307,25 @@ function buildPrintSheetHtml(report) {
       <td class="r">${omv.sum ? fmtDec(omv.sum, 2) : ''}</td>
     </tr>
   </table>
+
   <table class="signatures">
-    <tr><td>Отчел:</td><td><span class="sig-dots">................................</span> /подпис/</td></tr>
-    <tr><td>Одобрил:</td><td><span class="sig-dots">................................</span> /подпис/</td></tr>
-    <tr><td>Директор:</td><td><span class="sig-dots">................................</span> /подпис/</td></tr>
+    <tr>
+      <td>Отчел:</td>
+      <td><span class="sig-dots">................................</span> /подпис/</td>
+    </tr>
+    <tr>
+      <td>Одобрил:</td>
+      <td><span class="sig-dots">................................</span> /подпис/</td>
+    </tr>
+    <tr>
+      <td>Директор:</td>
+      <td><span class="sig-dots">................................</span> /подпис/</td>
+    </tr>
   </table>
-</div>`;
-}
-
-function mountPrintHost(report) {
-  const host = document.getElementById('logistics-print-host');
-  if (!host) throw new Error('Липсва елемент за печат.');
-  host.innerHTML =
-    `<style>${getPrintStyles()}</style>${buildPrintSheetHtml(report)}`;
-  host.hidden = false;
-}
-
-function teardownPrintHost() {
-  document.body.classList.remove('logistics-print-active');
-  const host = document.getElementById('logistics-print-host');
-  if (host) {
-    host.hidden = true;
-    host.innerHTML = '';
-  }
-  closePrintModal();
-}
-
-/** @param {import('./storage.js').LogisticsReport} report */
-export function openPrintModal(report) {
-  const modal = document.getElementById('logistics-print-modal');
-  const body = document.getElementById('logistics-print-modal-body');
-  if (!modal || !body) {
-    printReport(report);
-    return;
-  }
-  body.innerHTML =
-    `<div class="logistics-print-host"><style>${getPrintStyles()}</style>${buildPrintSheetHtml(report)}</div>`;
-  modal.classList.remove('hidden');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('logistics-print-modal-open');
-}
-
-export function closePrintModal() {
-  const modal = document.getElementById('logistics-print-modal');
-  const body = document.getElementById('logistics-print-modal-body');
-  if (modal) {
-    modal.classList.add('hidden');
-    modal.setAttribute('aria-hidden', 'true');
-  }
-  if (body) body.innerHTML = '';
-  document.body.classList.remove('logistics-print-modal-open');
-}
-
-/** Печат в същата страница — без window.open (работи на мобилен). */
-/** @param {import('./storage.js').LogisticsReport} report */
-export function printReport(report) {
-  mountPrintHost(report);
-  document.body.classList.add('logistics-print-active');
-
-  const onAfterPrint = () => {
-    teardownPrintHost();
-    window.removeEventListener('afterprint', onAfterPrint);
-  };
-  window.addEventListener('afterprint', onAfterPrint);
-
-  window.print();
-
-  setTimeout(() => {
-    if (document.body.classList.contains('logistics-print-active')) {
-      onAfterPrint();
-    }
-  }, 1200);
-}
-
-/** @param {import('./storage.js').LogisticsReport} report */
-export function openPrintPreview(report) {
-  printReport(report);
-}
-
-/** @param {import('./storage.js').LogisticsReport} report */
-export function buildPrintDocumentHtml(report) {
-  return `<!DOCTYPE html><html lang="bg"><head><meta charset="utf-8"><title> </title><style>${getPrintStyles()}</style></head><body class="logistics-print-host">${buildPrintSheetHtml(report)}</body></html>`;
+</div>
+<script>window.onload=function(){window.focus();window.print();};</script>
+</body>
+</html>`;
 }
 
 /** @param {string} s */
@@ -317,4 +335,16 @@ function escapeHtml(s) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/** @param {import('./storage.js').LogisticsReport} report */
+export function openPrintPreview(report) {
+  const html = buildPrintDocumentHtml(report);
+  const win = window.open('', '_blank');
+  if (!win) {
+    throw new Error('Блокиран pop-up. Разрешете прозорци за печат.');
+  }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
 }
