@@ -61,6 +61,69 @@
   color: #1e3a5f;
 }
 
+.logistics-print-host[hidden] {
+  display: none !important;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  html.logistics-print-active,
+  html.logistics-print-active body,
+  body.logistics-print-active {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.logistics-print-active > *:not(.print-container) {
+    display: none !important;
+  }
+
+  body.logistics-print-active .print-container {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.logistics-print-active .print-container,
+  body.logistics-print-active .print-container * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.logistics-print-active .print-container > style {
+    display: none !important;
+  }
+}
+
+@media screen {
+  body.logistics-print-active .print-container {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+}
+
 .logistics-archive-card {
   display: flex;
   align-items: center;
