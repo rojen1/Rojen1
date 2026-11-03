@@ -164,19 +164,35 @@ function getPrintStyles() {
       overflow: hidden !important;
       background: transparent !important;
     }
+    .logistics-print-host,
+    .print-container {
+      font-size: 9.75pt;
+      line-height: 1.14;
+    }
+    .logistics-print-host .title-box { font-size: 11pt; padding: 0.9mm 2.2mm; }
+    .logistics-print-host .legal { font-size: 8.25pt; }
+    .logistics-print-host .para3 { font-size: 8.75pt; }
+    .logistics-print-host table.summary { font-size: 8.25pt; }
+    .logistics-print-host table.summary td { padding: 0.3mm 1.1mm; }
+    .logistics-print-host table.fuel,
+    .logistics-print-host table.vendor-totals { font-size: 8.75pt; }
+    .logistics-print-host table.fuel th,
+    .logistics-print-host table.fuel td,
+    .logistics-print-host table.vendor-totals th,
+    .logistics-print-host table.vendor-totals td {
+      padding: 0.25mm 0.9mm;
+    }
+    .logistics-print-host .signatures { font-size: 8.75pt; }
     .print-container {
       display: block !important;
       visibility: visible !important;
-      position: fixed !important;
-      inset: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      top: 0 !important;
+      position: absolute;
+      left: 0;
+      top: 0;
       width: 100% !important;
       max-width: 100% !important;
-      min-height: 0 !important;
       background: #fff !important;
-      margin: 0 !important;
+      margin: 0 auto !important;
       padding: 0 !important;
       box-sizing: border-box;
       overflow: visible !important;
@@ -185,23 +201,10 @@ function getPrintStyles() {
     .print-container .sheet {
       width: 100% !important;
       max-width: 100% !important;
-      margin: 0 !important;
+      margin: 0 auto !important;
       padding: 0 !important;
       box-sizing: border-box;
       transform: none !important;
-      transform-origin: top left;
-    }
-    .logistics-print-host table.summary,
-    .print-container table.summary {
-      width: 100% !important;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
-    .logistics-print-host table.fuel,
-    .logistics-print-host table.vendor-totals,
-    .print-container table.fuel,
-    .print-container table.vendor-totals {
-      width: 100% !important;
     }
     .print-container,
     .print-container * {
@@ -213,53 +216,6 @@ function getPrintStyles() {
       height: 0 !important;
     }
   }`;
-}
-
-/** Пълна ширина на листа @ 100% — без transform scale (iOS print preview). */
-function preparePrintFullWidth() {
-  const host = document.getElementById('logistics-print-host');
-  const sheet = host?.querySelector('.sheet');
-  if (!host || !sheet) return;
-
-  host.style.setProperty('position', 'fixed', 'important');
-  host.style.setProperty('inset', '0', 'important');
-  host.style.setProperty('left', '0', 'important');
-  host.style.setProperty('right', '0', 'important');
-  host.style.setProperty('top', '0', 'important');
-  host.style.setProperty('width', '100%', 'important');
-  host.style.setProperty('max-width', '100%', 'important');
-  host.style.setProperty('margin', '0', 'important');
-  host.style.setProperty('padding', '0', 'important');
-  host.style.setProperty('transform', 'none', 'important');
-
-  sheet.style.setProperty('width', '100%', 'important');
-  sheet.style.setProperty('max-width', '100%', 'important');
-  sheet.style.setProperty('margin', '0', 'important');
-  sheet.style.setProperty('transform', 'none', 'important');
-}
-
-function resetPrintHostLayout() {
-  const host = document.getElementById('logistics-print-host');
-  const sheet = host?.querySelector('.sheet');
-  if (host) {
-    host.style.removeProperty('position');
-    host.style.removeProperty('inset');
-    host.style.removeProperty('left');
-    host.style.removeProperty('right');
-    host.style.removeProperty('top');
-    host.style.removeProperty('width');
-    host.style.removeProperty('max-width');
-    host.style.removeProperty('height');
-    host.style.removeProperty('margin');
-    host.style.removeProperty('padding');
-    host.style.removeProperty('transform');
-  }
-  if (sheet) {
-    sheet.style.removeProperty('width');
-    sheet.style.removeProperty('max-width');
-    sheet.style.removeProperty('margin');
-    sheet.style.removeProperty('transform');
-  }
 }
 
 const PRINT_SKIP_ATTR = 'data-logistics-print-skip';
@@ -398,7 +354,6 @@ function teardownPrintHost() {
   document.body.classList.remove('logistics-print-active');
   document.documentElement.classList.remove('logistics-print-active');
   restoreNonPrintBodyChildren();
-  resetPrintHostLayout();
   const host = document.getElementById('logistics-print-host');
   if (host) {
     host.hidden = true;
@@ -448,12 +403,7 @@ export function printReport(report) {
   };
   window.addEventListener('afterprint', onAfterPrint);
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      preparePrintFullWidth();
-      window.print();
-    });
-  });
+  window.print();
 
   setTimeout(() => {
     if (document.body.classList.contains('logistics-print-active')) {
