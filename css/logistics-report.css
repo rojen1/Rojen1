@@ -114,19 +114,17 @@ body.logistics-print-modal-open {
 }
 
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 0mm;
-  }
-
   html.logistics-print-active,
   html.logistics-print-active body,
   body.logistics-print-active {
-    width: 100% !important;
+    background: #fff !important;
     height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #fff !important;
+    -webkit-print-color-adjust: economy;
+    print-color-adjust: economy;
   }
 
   [data-theme='dark'] html.logistics-print-active,
@@ -148,13 +146,22 @@ body.logistics-print-modal-open {
     box-shadow: none !important;
   }
 
-  body.logistics-print-active .print-container,
-  body.logistics-print-active .print-container * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  @page {
+    size: A4 portrait;
+    margin: 5mm;
+    margin-bottom: 0mm;
+  }
+
+  html.logistics-print-active,
+  html.logistics-print-active body,
+  body.logistics-print-active {
+    width: 100% !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   body.logistics-print-active .print-container {
+    display: block !important;
     visibility: visible !important;
     position: absolute;
     left: 0;
@@ -162,26 +169,20 @@ body.logistics-print-modal-open {
     width: 100% !important;
     max-width: 100% !important;
     background: #fff !important;
-    margin: 0 !important;
-    padding: 11mm 13mm !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
-  }
-
-  body.logistics-print-active .print-container > style {
-    display: none !important;
-    height: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     padding: 0 !important;
+    box-sizing: border-box;
+    overflow: visible !important;
+    font-size: 9.75pt;
+    line-height: 1.14;
   }
 
   body.logistics-print-active .print-container .sheet {
-    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 auto !important;
     padding: 0 !important;
-    box-sizing: border-box !important;
+    box-sizing: border-box;
   }
 
   body.logistics-print-active footer {
