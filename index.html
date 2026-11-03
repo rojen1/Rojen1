@@ -486,6 +486,9 @@
             <button type="button" id="logistics-save" class="py-3 rounded-xl bg-success text-white font-bold text-sm">Запази отчет</button>
             <button type="button" id="logistics-print" class="py-3 rounded-xl bg-navy text-white font-bold text-sm">Печат / PDF</button>
           </div>
+          <button type="button" id="logistics-print-preview" class="w-full py-2.5 rounded-xl border border-navy/20 text-navy font-semibold text-sm">
+            Преглед преди печат
+          </button>
         </div>
 
         <div id="logistics-panel-archive" class="hidden space-y-3">
@@ -739,6 +742,22 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Logistics report print (same page — no pop-up) -->
+  <div id="logistics-print-host" class="logistics-print-host" hidden aria-hidden="true"></div>
+  <div id="logistics-print-modal" class="logistics-print-modal hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="logistics-print-modal-title">
+    <div id="logistics-print-modal-backdrop" class="logistics-print-modal-backdrop"></div>
+    <div class="logistics-print-modal-panel">
+      <div class="logistics-print-modal-toolbar">
+        <h2 id="logistics-print-modal-title" class="text-sm font-bold text-navy">Преглед преди печат</h2>
+        <div class="flex gap-2">
+          <button type="button" id="logistics-print-modal-run" class="logistics-btn-sm">Печат / PDF</button>
+          <button type="button" id="logistics-print-modal-close" class="logistics-btn-sm logistics-btn-secondary">Затвори</button>
+        </div>
+      </div>
+      <div id="logistics-print-modal-body" class="logistics-print-modal-body"></div>
     </div>
   </div>
 
