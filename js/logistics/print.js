@@ -78,8 +78,9 @@ export function buildPrintDocumentHtml(report) {
     )
     .join('');
 
-  const emptyRows = Array.from({ length: Math.max(0, 8 - receipts.length) })
-    .map(() => '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>')
+  const emptyRowCount = Math.max(0, Math.min(5, 9 - receipts.length));
+  const emptyRows = Array.from({ length: emptyRowCount })
+    .map(() => '<tr class="fuel-empty"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>')
     .join('');
 
   return `<!DOCTYPE html>
@@ -88,52 +89,62 @@ export function buildPrintDocumentHtml(report) {
 <meta charset="utf-8">
 <title>ОТЧЕТ-ПРОТОКОЛ ${escapeHtml(report.plate)}</title>
 <style>
-  @page { size: A4 portrait; margin: 10mm 12mm; }
+  @page { size: A4 portrait; margin: 10mm; }
   * { box-sizing: border-box; }
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+  }
   body {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 10.5pt;
+    font-size: 9pt;
     color: #000;
-    margin: 0;
-    line-height: 1.35;
+    line-height: 1.15;
   }
-  .sheet { max-width: 186mm; margin: 0 auto; }
+  .sheet {
+    width: 190mm;
+    max-height: 277mm;
+    margin: 0 auto;
+    overflow: hidden;
+  }
   .title-box {
     text-align: center;
     font-weight: bold;
-    font-size: 13pt;
+    font-size: 11pt;
     border: 1px solid #000;
-    padding: 3mm 2mm;
-    margin-bottom: 4mm;
+    padding: 1.5mm 2mm;
+    margin-bottom: 2mm;
     letter-spacing: 0.02em;
   }
   .shade {
     display: inline-block;
-    min-width: 18mm;
+    min-width: 16mm;
     background: #d9d9d9;
-    padding: 0.5mm 2mm;
+    padding: 0.2mm 1.5mm;
     border: 1px solid #999;
     vertical-align: baseline;
   }
-  .shade.wide { min-width: 55mm; }
-  .shade.km { min-width: 22mm; text-align: center; }
-  .shade.num { min-width: 16mm; text-align: right; }
-  .top-row { margin-bottom: 2mm; }
-  .line { margin: 1.5mm 0; }
-  .legal { font-size: 10pt; margin: 3mm 0 4mm; }
-  ol.main { margin: 0 0 3mm 5mm; padding: 0 0 0 5mm; }
-  ol.main li { margin-bottom: 2mm; }
-  .para3 { margin: 2mm 0 4mm 0; font-size: 10.5pt; }
+  .shade.wide { min-width: 48mm; }
+  .shade.km { min-width: 18mm; text-align: center; }
+  .shade.num { min-width: 14mm; text-align: right; }
+  .top-row { margin-bottom: 1mm; }
+  .line { margin: 0.8mm 0; }
+  .legal { font-size: 8.5pt; margin: 1.5mm 0 2mm; line-height: 1.2; }
+  ol.main { margin: 0 0 1.5mm 4mm; padding: 0 0 0 4mm; }
+  ol.main li { margin-bottom: 0.8mm; }
+  .para3 { margin: 1mm 0 2mm 0; font-size: 9pt; line-height: 1.2; }
   .summary {
     width: 72%;
     margin-left: auto;
-    margin-bottom: 4mm;
+    margin-bottom: 2mm;
     border-collapse: collapse;
-    font-size: 10pt;
+    font-size: 8.5pt;
   }
   .summary td {
     border: 1px solid #000;
-    padding: 1.5mm 2mm;
+    padding: 0.6mm 1.5mm;
     vertical-align: middle;
   }
   .summary td.label {
@@ -149,18 +160,23 @@ export function buildPrintDocumentHtml(report) {
   .table-title {
     text-align: center;
     font-weight: bold;
-    margin: 3mm 0 2mm;
-    font-size: 10.5pt;
+    margin: 1.5mm 0 1mm;
+    font-size: 9pt;
   }
   table.fuel {
     width: 100%;
     border-collapse: collapse;
-    font-size: 10pt;
-    margin-bottom: 3mm;
+    font-size: 8.5pt;
+    margin-bottom: 1.5mm;
   }
   table.fuel th, table.fuel td {
     border: 1px solid #000;
-    padding: 1.2mm 2mm;
+    padding: 0.45mm 1.2mm;
+    line-height: 1.1;
+  }
+  table.fuel tr.fuel-empty td {
+    height: 4mm;
+    padding: 0.2mm 1.2mm;
   }
   table.fuel th {
     font-weight: bold;
@@ -173,25 +189,41 @@ export function buildPrintDocumentHtml(report) {
     width: 45%;
     margin-left: auto;
     border-collapse: collapse;
-    font-size: 10pt;
-    margin-bottom: 8mm;
+    font-size: 8.5pt;
+    margin-bottom: 3mm;
   }
   table.vendor-totals td, table.vendor-totals th {
     border: 1px solid #000;
-    padding: 1.2mm 2mm;
+    padding: 0.5mm 1.5mm;
   }
   table.vendor-totals th { font-weight: bold; text-align: center; }
   table.vendor-totals td.r { text-align: right; background: #d9d9d9; font-weight: bold; }
   .signatures {
-    width: 55%;
+    width: 58%;
     margin-left: auto;
-    font-size: 10pt;
+    font-size: 9pt;
     border-collapse: collapse;
   }
-  .signatures td { padding: 2mm 0; vertical-align: bottom; }
-  .sig-name { border-bottom: 1px dotted #000; min-height: 6mm; display: inline-block; min-width: 45mm; }
+  .signatures td { padding: 1mm 0; vertical-align: bottom; }
+  .sig-dots {
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
   @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body {
+      width: auto;
+      height: auto;
+    }
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .sheet {
+      max-height: none;
+      overflow: visible;
+      page-break-inside: avoid;
+      page-break-after: avoid;
+    }
   }
 </style>
 </head>
@@ -279,15 +311,15 @@ export function buildPrintDocumentHtml(report) {
   <table class="signatures">
     <tr>
       <td>Отчел:</td>
-      <td><span class="sig-name">${escapeHtml(report.driverName)}</span> / подпис /</td>
+      <td><span class="sig-dots">................................</span> /подпис/</td>
     </tr>
     <tr>
       <td>Одобрил:</td>
-      <td><span class="sig-name"></span> / подпис /</td>
+      <td><span class="sig-dots">................................</span> /подпис/</td>
     </tr>
     <tr>
       <td>Директор:</td>
-      <td><span class="sig-name"></span> / подпис /</td>
+      <td><span class="sig-dots">................................</span> /подпис/</td>
     </tr>
   </table>
 </div>
