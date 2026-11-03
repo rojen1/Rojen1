@@ -2,9 +2,10 @@ import { ref, get } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-dat
 import { getFirebaseDb } from '../firebase.js';
 
 const RECEIPT_PROMPT =
-  'Извлечи от касова бележка за гориво (EKO, Shell, OMV и др.) JSON с полета: ' +
-  'date (YYYY-MM-DD), vendor, liters (число), unitPrice (€/л), total (€), odometerKm (ако има). ' +
-  'Само JSON без markdown.';
+  'Извлечи от българска касова бележка за гориво (EKO, Shell, OMV, Lukoil и др.) JSON с полета: ' +
+  'date (YYYY-MM-DD), vendor, liters (число), unitPrice (€/л), total (€), odometerKm (цели км от бележката — ' +
+  'полета като „км“, „километраж“, „одометър“, „KM“; не рег. номер на автобус). ' +
+  'Ако има номер на автобус/рег. номер на бележката, игнорирай го за odometerKm. Само JSON без markdown.';
 
 /** @returns {Promise<{ apiKey: string, model: string } | null>} */
 async function getGeminiConfig() {

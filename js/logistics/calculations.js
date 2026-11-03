@@ -24,6 +24,32 @@ export function calcAvgConsumptionPer100(totalLiters, totalKm) {
   return Math.round((Number(totalLiters) / totalKm) * 100 * 100) / 100;
 }
 
+/**
+ * Километраж от последното зареждане в периода (най-късна дата; при равенство — по-голям km).
+ * @param {FuelReceiptRow[]} receipts
+ * @param {string} [periodFrom] YYYY-MM-DD
+ * @param {string} [periodTo] YYYY-MM-DD
+ */
+export function odometerKmFromLastReceiptInPeriod(receipts, periodFrom, periodTo) {
+  const from = String(periodFrom || '').slice(0, 10);
+  const to = String(periodTo || '').slice(0, 10);
+  const candidates = (receipts || []).filter(r => {
+    const km = Number(r.odometerKm);
+    if (!Number.isFinite(km) || km <= 0) return false;
+    const d = String(r.date || '').slice(0, 10);
+    if (d && from && d < from) return false;
+    if (d && to && d > to) return false;
+    return true;
+  });
+  if (!candidates.length) return null;
+  candidates.sort((a, b) => {
+    const byDate = (b.date || '').localeCompare(a.date || '');
+    if (byDate !== 0) return byDate;
+    return Number(b.odometerKm) - Number(a.odometerKm);
+  });
+  return candidates[0].odometerKm;
+}
+
 /** @param {Partial<FuelReceiptRow>} row */
 export function normalizeReceiptRow(row) {
   const liters = Number(row.liters) || 0;

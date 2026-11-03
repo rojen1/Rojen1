@@ -5,6 +5,7 @@ import {
   calcAvgConsumptionPer100,
   calcTotalKm,
   normalizeReceiptRow,
+  odometerKmFromLastReceiptInPeriod,
   sumReceiptAmount,
   sumReceiptLiters
 } from '../logistics/calculations.js';
@@ -130,7 +131,21 @@ function readFormReport() {
   };
 }
 
+function syncOdometerEndFromReceipts() {
+  const endEl = document.getElementById('logistics-odometer-end');
+  if (!endEl || endEl.dataset.userEdited) return;
+  const report = readFormReport();
+  const km = odometerKmFromLastReceiptInPeriod(
+    report.receipts,
+    report.periodFrom,
+    report.periodTo
+  );
+  if (km == null) return;
+  endEl.value = String(Math.round(km));
+}
+
 function updateTotalsPanel() {
+  syncOdometerEndFromReceipts();
   const report = readFormReport();
   const totalKm = calcTotalKm(report.odometerStart, report.odometerEnd);
   const liters = sumReceiptLiters(report.receipts);
@@ -214,7 +229,12 @@ function fillFormFromReport(report) {
   document.getElementById('logistics-period-from').value = report.periodFrom;
   document.getElementById('logistics-period-to').value = report.periodTo;
   document.getElementById('logistics-odometer-start').value = String(report.odometerStart);
-  document.getElementById('logistics-odometer-end').value = String(report.odometerEnd);
+  const endEl = document.getElementById('logistics-odometer-end');
+  if (endEl) {
+    endEl.value = String(report.odometerEnd);
+    if (report.odometerEnd > 0) endEl.dataset.userEdited = '1';
+    else endEl.removeAttribute('data-user-edited');
+  }
   document.getElementById('logistics-notes').value = report.notes || '';
   document.getElementById('logistics-report-no').value = report.reportNo || '';
   document.getElementById('logistics-report-date').value = report.reportDate || '';
@@ -247,6 +267,7 @@ function resetNewForm() {
   document.getElementById('logistics-odometer-start').value = '';
   document.getElementById('logistics-odometer-start')?.removeAttribute('data-user-edited');
   document.getElementById('logistics-odometer-end').value = '';
+  document.getElementById('logistics-odometer-end')?.removeAttribute('data-user-edited');
   document.getElementById('logistics-notes').value = '';
   document.getElementById('logistics-report-no').value = '';
   document.getElementById('logistics-report-date').value = formatDateKey(new Date());
@@ -364,7 +385,13 @@ export function initLogisticsReportView() {
     e.target.dataset.userEdited = '1';
     updateTotalsPanel();
   });
-  document.getElementById('logistics-odometer-end')?.addEventListener('input', updateTotalsPanel);
+  document.getElementById('logistics-odometer-end')?.addEventListener('input', e => {
+    e.target.dataset.userEdited = '1';
+    updateTotalsPanel();
+  });
+  ['logistics-period-from', 'logistics-period-to'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', updateTotalsPanel);
+  });
 
   document.getElementById('logistics-add-receipt')?.addEventListener('click', () => addReceiptRow());
   document.getElementById('logistics-new-report')?.addEventListener('click', resetNewForm);
