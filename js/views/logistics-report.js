@@ -15,7 +15,7 @@ import {
   subscribeLogisticsReports
 } from '../logistics/storage.js';
 import { extractReceiptFromImage } from '../logistics/receipt-vision.js';
-import { printReport } from '../logistics/print.js';
+import { openPrintPreview } from '../logistics/print.js';
 
 /** @type {import('../logistics/storage.js').LogisticsReport[]} */
 let archiveReports = [];
@@ -274,7 +274,7 @@ function renderArchiveList() {
       const rep = archiveReports.find(x => x.id === id);
       if (rep) {
         try {
-          printReport(rep);
+          openPrintPreview(rep);
         } catch (e) {
           toast(e.message || 'Грешка при печат.');
         }
@@ -383,7 +383,7 @@ export function initLogisticsReportView() {
 
   document.getElementById('logistics-print')?.addEventListener('click', () => {
     try {
-      printReport(readFormReport());
+      openPrintPreview(readFormReport());
     } catch (e) {
       toast(e.message || 'Грешка при печат.');
     }
