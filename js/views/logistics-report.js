@@ -383,11 +383,36 @@ export function initLogisticsReportView() {
 
   document.getElementById('logistics-print')?.addEventListener('click', () => {
     try {
-      openPrintPreview(readFormReport());
+      printReport(readFormReport());
     } catch (e) {
       toast(e.message || 'Грешка при печат.');
     }
   });
+
+  document.getElementById('logistics-print-preview')?.addEventListener('click', () => {
+    try {
+      openPrintModal(readFormReport());
+    } catch (e) {
+      toast(e.message || 'Грешка при преглед.');
+    }
+  });
+
+  document.getElementById('logistics-print-modal-run')?.addEventListener('click', () => {
+    const body = document.getElementById('logistics-print-modal-body');
+    const host = document.getElementById('logistics-print-host');
+    if (host && body?.innerHTML) {
+      host.innerHTML = body.querySelector('.logistics-print-host')?.innerHTML || body.innerHTML;
+      host.hidden = false;
+    }
+    try {
+      printReport(readFormReport());
+    } catch (e) {
+      toast(e.message || 'Грешка при печат.');
+    }
+  });
+
+  document.getElementById('logistics-print-modal-close')?.addEventListener('click', closePrintModal);
+  document.getElementById('logistics-print-modal-backdrop')?.addEventListener('click', closePrintModal);
 
   ['logistics-filter-bus', 'logistics-filter-from', 'logistics-filter-to'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', renderArchiveList);

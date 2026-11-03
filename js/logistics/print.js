@@ -51,18 +51,33 @@ function vendorTotals(receipts, match) {
 
 function getPrintStyles() {
   return `
-  @page { size: A4 portrait; margin: 10mm; }
-  .logistics-print-host {
+  @page {
+    size: A4 portrait;
+    margin: 7mm 9mm;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+  .logistics-print-host,
+  .print-container {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 8.5pt;
-    line-height: 1.12;
+    font-size: 8pt;
+    line-height: 1.1;
     color: #000;
     background: #fff;
   }
-  .logistics-print-host .sheet { max-width: 190mm; margin: 0 auto; }
+  .logistics-print-host .sheet,
+  .print-container .sheet {
+    max-width: 100%;
+    margin: 0 auto;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+  }
   .logistics-print-host .title-box {
-    text-align: center; font-weight: bold; font-size: 10.5pt;
-    border: 1px solid #000; padding: 1mm 2mm; margin-bottom: 1.5mm;
+    text-align: center; font-weight: bold; font-size: 10pt;
+    border: 1px solid #000; padding: 0.8mm 2mm; margin-bottom: 1mm;
   }
   .logistics-print-host .field {
     display: inline-block; min-width: 14mm; border: 1px solid #000;
@@ -71,18 +86,18 @@ function getPrintStyles() {
   .logistics-print-host .field.wide { min-width: 46mm; }
   .logistics-print-host .field.km { min-width: 16mm; text-align: center; }
   .logistics-print-host .field.num { min-width: 12mm; text-align: right; }
-  .logistics-print-host .top-row { margin-bottom: 0.8mm; }
-  .logistics-print-host .line { margin: 0.5mm 0; }
-  .logistics-print-host .legal { font-size: 8pt; margin: 1mm 0 1.5mm; line-height: 1.15; }
-  .logistics-print-host ol.main { margin: 0 0 1mm 4mm; padding: 0 0 0 4mm; }
-  .logistics-print-host ol.main li { margin-bottom: 0.5mm; }
-  .logistics-print-host .para3 { margin: 0.8mm 0 1.5mm; font-size: 8.5pt; line-height: 1.15; }
+  .logistics-print-host .top-row { margin-bottom: 0.5mm; }
+  .logistics-print-host .line { margin: 0.35mm 0; }
+  .logistics-print-host .legal { font-size: 7.5pt; margin: 0.6mm 0 1mm; line-height: 1.12; }
+  .logistics-print-host ol.main { margin: 0 0 0.6mm 4mm; padding: 0 0 0 4mm; }
+  .logistics-print-host ol.main li { margin-bottom: 0.35mm; }
+  .logistics-print-host .para3 { margin: 0.5mm 0 1mm; font-size: 8pt; line-height: 1.12; }
   .logistics-print-host table.summary {
-    width: 74%; margin-left: auto; margin-bottom: 1.5mm;
-    border-collapse: collapse; font-size: 8pt;
+    width: 74%; margin-left: auto; margin-bottom: 1mm;
+    border-collapse: collapse; font-size: 7.5pt;
   }
   .logistics-print-host table.summary td {
-    border: 1px solid #000; padding: 0.4mm 1.2mm; background: #fff;
+    border: 1px solid #000; padding: 0.25mm 1mm; background: #fff;
   }
   .logistics-print-host table.summary td.label { text-align: left; font-weight: bold; width: 70%; }
   .logistics-print-host table.summary td.val { text-align: right; font-weight: 600; width: 30%; }
@@ -93,12 +108,12 @@ function getPrintStyles() {
   .logistics-print-host table.vendor-totals {
     width: 100%; border-collapse: collapse; font-size: 8pt;
   }
-  .logistics-print-host table.fuel { margin-bottom: 1mm; }
+  .logistics-print-host table.fuel { margin-bottom: 0.6mm; }
   .logistics-print-host table.fuel th,
   .logistics-print-host table.fuel td,
   .logistics-print-host table.vendor-totals th,
   .logistics-print-host table.vendor-totals td {
-    border: 1px solid #000; padding: 0.35mm 1mm; background: #fff; line-height: 1.08;
+    border: 1px solid #000; padding: 0.2mm 0.8mm; background: #fff; line-height: 1.05;
   }
   .logistics-print-host table.fuel th,
   .logistics-print-host table.vendor-totals th { font-weight: bold; text-align: center; }
@@ -106,27 +121,42 @@ function getPrintStyles() {
   .logistics-print-host table.vendor-totals td.r { text-align: right; }
   .logistics-print-host table.fuel td.c { text-align: center; }
   .logistics-print-host table.vendor-totals {
-    width: 42%; margin-left: auto; margin-bottom: 2mm;
+    width: 42%; margin-left: auto; margin-bottom: 1mm;
   }
   .logistics-print-host .signatures {
-    width: 56%; margin-left: auto; font-size: 8.5pt; border-collapse: collapse;
+    width: 56%; margin-left: auto; font-size: 8pt; border-collapse: collapse;
   }
-  .logistics-print-host .signatures td { padding: 0.6mm 0; vertical-align: bottom; }
+  .logistics-print-host .signatures td { padding: 0.4mm 0; vertical-align: bottom; }
   .logistics-print-host .sig-dots { letter-spacing: 0.1em; }
   @media print {
-    body.logistics-print-active * { visibility: hidden !important; }
-    body.logistics-print-active .logistics-print-host,
-    body.logistics-print-active .logistics-print-host * {
-      visibility: visible !important;
+    html, body {
+      width: 210mm;
+      height: 297mm;
+      overflow: hidden;
     }
-    body.logistics-print-active .logistics-print-host {
+    body * {
+      visibility: hidden;
+    }
+    .print-container,
+    .print-container *,
+    .logistics-print-host,
+    .logistics-print-host * {
+      visibility: visible;
+    }
+    .print-container,
+    .logistics-print-host {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
       display: block !important;
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
+      background: #fff !important;
+    }
+    button, .btn, nav, header, .no-print {
+      display: none !important;
+      visibility: hidden !important;
     }
   }`;
 }
@@ -262,7 +292,7 @@ export function openPrintModal(report) {
     return;
   }
   body.innerHTML =
-    `<div class="logistics-print-host"><style>${getPrintStyles()}</style>${buildPrintSheetHtml(report)}</div>`;
+    `<div class="logistics-print-host print-container"><style>${getPrintStyles()}</style>${buildPrintSheetHtml(report)}</div>`;
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('logistics-print-modal-open');
@@ -282,6 +312,7 @@ export function closePrintModal() {
 /** Печат в същата страница — без window.open (работи на мобилен). */
 /** @param {import('./storage.js').LogisticsReport} report */
 export function printReport(report) {
+  closePrintModal();
   mountPrintHost(report);
   document.body.classList.add('logistics-print-active');
 
