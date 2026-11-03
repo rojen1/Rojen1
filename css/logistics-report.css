@@ -114,50 +114,60 @@ body.logistics-print-modal-open {
 }
 
 @media print {
+  html.logistics-print-active,
+  html.logistics-print-active body,
   body.logistics-print-active {
     background: #fff !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
+    -webkit-print-color-adjust: economy;
+    print-color-adjust: economy;
   }
 
-  body.logistics-print-active * {
-    visibility: hidden;
+  [data-theme='dark'] html.logistics-print-active,
+  [data-theme='dark'] html.logistics-print-active body,
+  [data-theme='dark'] body.logistics-print-active {
+    background: #fff !important;
+    color: #000 !important;
   }
 
-  body.logistics-print-active .print-container,
-  body.logistics-print-active .print-container * {
-    visibility: visible;
+  body.logistics-print-active > *:not(.print-container) {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 
   body.logistics-print-active .print-container {
+    display: block !important;
+    visibility: visible !important;
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
-    display: block !important;
+    background: #fff !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #fff !important;
   }
 
-  body.logistics-print-active #app,
-  body.logistics-print-active #login-screen,
-  body.logistics-print-active #loading-screen,
-  body.logistics-print-active #logistics-print-modal,
-  body.logistics-print-active #toast,
-  body.logistics-print-active #update-banner {
-    display: none !important;
-    visibility: hidden !important;
+  body.logistics-print-active .print-container,
+  body.logistics-print-active .print-container * {
+    visibility: visible !important;
   }
 
   body.logistics-print-active button,
   body.logistics-print-active .btn,
   body.logistics-print-active nav,
   body.logistics-print-active header,
-  body.logistics-print-active .no-print,
-  body.logistics-print-active .logistics-print-modal,
-  body.logistics-print-active .logistics-print-modal-backdrop,
-  body.logistics-print-active .update-banner {
+  body.logistics-print-active .no-print {
     display: none !important;
     visibility: hidden !important;
   }

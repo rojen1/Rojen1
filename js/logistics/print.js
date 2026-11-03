@@ -130,35 +130,61 @@ function getPrintStyles() {
   .logistics-print-host .sig-dots { letter-spacing: 0.1em; }
   @media print {
     html, body {
-      width: 210mm;
-      height: 297mm;
-      overflow: hidden;
+      background: #fff !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
-    body * {
-      visibility: hidden;
+    body > *:not(.print-container) {
+      display: none !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+      background: transparent !important;
     }
-    .print-container,
-    .print-container *,
-    .logistics-print-host,
-    .logistics-print-host * {
-      visibility: visible;
-    }
-    .print-container,
-    .logistics-print-host {
+    .print-container {
+      display: block !important;
+      visibility: visible !important;
       position: absolute;
       left: 0;
       top: 0;
       width: 100%;
-      display: block !important;
-      padding: 0 !important;
-      margin: 0 !important;
       background: #fff !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .print-container,
+    .print-container * {
+      visibility: visible !important;
     }
     button, .btn, nav, header, .no-print {
       display: none !important;
       visibility: hidden !important;
     }
   }`;
+}
+
+const PRINT_SKIP_ATTR = 'data-logistics-print-skip';
+
+function hideNonPrintBodyChildren() {
+  for (const child of document.body.children) {
+    if (child.classList?.contains('print-container')) continue;
+    if (child.tagName === 'SCRIPT') continue;
+    child.setAttribute(PRINT_SKIP_ATTR, '1');
+    child.style.setProperty('display', 'none', 'important');
+    child.style.setProperty('visibility', 'hidden', 'important');
+  }
+}
+
+function restoreNonPrintBodyChildren() {
+  for (const el of document.querySelectorAll(`[${PRINT_SKIP_ATTR}="1"]`)) {
+    el.removeAttribute(PRINT_SKIP_ATTR);
+    el.style.removeProperty('display');
+    el.style.removeProperty('visibility');
+  }
 }
 
 /** @param {import('./storage.js').LogisticsReport} report */
@@ -275,6 +301,8 @@ function mountPrintHost(report) {
 
 function teardownPrintHost() {
   document.body.classList.remove('logistics-print-active');
+  document.documentElement.classList.remove('logistics-print-active');
+  restoreNonPrintBodyChildren();
   const host = document.getElementById('logistics-print-host');
   if (host) {
     host.hidden = true;
@@ -314,7 +342,9 @@ export function closePrintModal() {
 export function printReport(report) {
   closePrintModal();
   mountPrintHost(report);
+  document.documentElement.classList.add('logistics-print-active');
   document.body.classList.add('logistics-print-active');
+  hideNonPrintBodyChildren();
 
   const onAfterPrint = () => {
     teardownPrintHost();
