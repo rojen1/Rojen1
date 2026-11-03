@@ -1,6 +1,7 @@
 import { ref, get, set, update, onValue, push, remove } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js';
 import { getFirebaseDb } from '../firebase.js';
 import { getCurrentUsername } from '../storage.js';
+import { receiptsForFirebase } from './calculations.js';
 
 /** @typedef {import('./calculations.js').FuelReceiptRow} FuelReceiptRow */
 
@@ -131,7 +132,7 @@ export async function saveLogisticsReport(report) {
     periodTo: report.periodTo,
     odometerStart: report.odometerStart,
     odometerEnd: report.odometerEnd,
-    receipts: report.receipts || [],
+    receipts: receiptsForFirebase(report.receipts),
     notes: report.notes || '',
     reportNo: report.reportNo || '',
     reportDate: report.reportDate || '',

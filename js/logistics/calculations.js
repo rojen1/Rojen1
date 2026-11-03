@@ -40,6 +40,24 @@ export function normalizeReceiptRow(row) {
     unitPrice,
     total,
     odometerKm: Number(row.odometerKm) || 0,
-    note: row.note ? String(row.note).trim() : undefined
+    note: row.note != null && String(row.note).trim() ? String(row.note).trim() : ''
   };
+}
+
+/** Firebase RTDB не приема undefined — почистване преди set() */
+/** @param {FuelReceiptRow[]} receipts */
+export function receiptsForFirebase(receipts) {
+  return (receipts || []).map(r => {
+    const row = normalizeReceiptRow(r);
+    return {
+      id: row.id,
+      date: row.date,
+      vendor: row.vendor,
+      liters: row.liters,
+      unitPrice: row.unitPrice,
+      total: row.total,
+      odometerKm: row.odometerKm,
+      note: row.note
+    };
+  });
 }
