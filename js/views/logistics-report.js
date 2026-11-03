@@ -10,6 +10,7 @@ import {
 } from '../logistics/calculations.js';
 import {
   deleteLogisticsReport,
+  fetchLastDriverName,
   fetchLastOdometerEnd,
   saveLogisticsReport,
   subscribeLogisticsReports
@@ -47,6 +48,26 @@ function defaultDriverName() {
   const data = loadData();
   const p = data.profile;
   return p?.displayName || p?.username || '';
+}
+
+/** @param {string} busId */
+function driverNameFromArchive(busId) {
+  if (!busId) return '';
+  const match = archiveReports
+    .filter(r => r.busId === busId && String(r.driverName || '').trim())
+    .sort((a, b) =>
+      (b.updatedAt || b.periodTo || '').localeCompare(a.updatedAt || a.periodTo || '')
+    );
+  return match[0]?.driverName?.trim() || '';
+}
+
+/** @param {string} busId */
+async function resolveDriverNameForBus(busId) {
+  const fromArchive = driverNameFromArchive(busId);
+  if (fromArchive) return fromArchive;
+  const fromState = await fetchLastDriverName(busId);
+  if (fromState) return fromState;
+  return defaultDriverName();
 }
 
 /** @param {string} message */
@@ -166,6 +187,10 @@ async function onBusChange() {
     if (regionEl) regionEl.value = bus.region;
   }
   if (busId && !editingReportId) {
+    const driverEl = document.getElementById('logistics-driver-name');
+    if (driverEl && !driverEl.dataset.userEdited) {
+      driverEl.value = await resolveDriverNameForBus(busId);
+    }
     const last = await fetchLastOdometerEnd(busId);
     const startEl = document.getElementById('logistics-odometer-start');
     if (last != null && startEl && !startEl.dataset.userEdited) {
@@ -181,7 +206,11 @@ function fillFormFromReport(report) {
   document.getElementById('logistics-bus-name').value = report.busName;
   document.getElementById('logistics-plate').value = report.plate;
   document.getElementById('logistics-region').value = report.region;
-  document.getElementById('logistics-driver-name').value = report.driverName;
+  const driverEl = document.getElementById('logistics-driver-name');
+  if (driverEl) {
+    driverEl.value = report.driverName;
+    driverEl.removeAttribute('data-user-edited');
+  }
   document.getElementById('logistics-period-from').value = report.periodFrom;
   document.getElementById('logistics-period-to').value = report.periodTo;
   document.getElementById('logistics-odometer-start').value = String(report.odometerStart);
@@ -208,7 +237,11 @@ function resetNewForm() {
   document.getElementById('logistics-bus-name').value = bus?.name || '';
   document.getElementById('logistics-plate').value = bus?.plate || '';
   document.getElementById('logistics-region').value = bus?.region || '';
-  document.getElementById('logistics-driver-name').value = defaultDriverName();
+  const driverEl = document.getElementById('logistics-driver-name');
+  if (driverEl) {
+    driverEl.value = driverNameFromArchive(bus?.id || '') || defaultDriverName();
+    driverEl.removeAttribute('data-user-edited');
+  }
   document.getElementById('logistics-period-from').value = period.from;
   document.getElementById('logistics-period-to').value = period.to;
   document.getElementById('logistics-odometer-start').value = '';
@@ -324,6 +357,9 @@ export function initLogisticsReportView() {
   });
 
   document.getElementById('logistics-bus')?.addEventListener('change', onBusChange);
+  document.getElementById('logistics-driver-name')?.addEventListener('input', e => {
+    e.target.dataset.userEdited = '1';
+  });
   document.getElementById('logistics-odometer-start')?.addEventListener('input', e => {
     e.target.dataset.userEdited = '1';
     updateTotalsPanel();
@@ -405,6 +441,14 @@ export function renderLogisticsReportView() {
     unsubReports = subscribeLogisticsReports(username, reports => {
       archiveReports = reports;
       if (subView === 'archive') renderArchiveList();
+      if (subView === 'form' && !editingReportId) {
+        const busId = document.getElementById('logistics-bus')?.value || '';
+        const nameEl = document.getElementById('logistics-driver-name');
+        if (busId && nameEl && !nameEl.dataset.userEdited) {
+          const fromArchive = driverNameFromArchive(busId);
+          if (fromArchive) nameEl.value = fromArchive;
+        }
+      }
     });
   }
 

@@ -41,6 +41,10 @@ function odometerStateRef(username, busId) {
   return ref(getFirebaseDb(), `accounts/${username}/logisticsState/odometer/${busId}`);
 }
 
+function driverNameStateRef(username, busId) {
+  return ref(getFirebaseDb(), `accounts/${username}/logisticsState/driverName/${busId}`);
+}
+
 /** @param {unknown} raw */
 export function normalizeReport(raw) {
   if (!raw || typeof raw !== 'object') return null;
@@ -96,11 +100,29 @@ export async function fetchLastOdometerEnd(busId) {
   return Number.isFinite(v) ? v : null;
 }
 
+/** @param {string} busId */
+export async function fetchLastDriverName(busId) {
+  const username = getCurrentUsername();
+  if (!username || !busId) return '';
+  const snap = await get(driverNameStateRef(username, busId));
+  if (!snap.exists()) return '';
+  const v = String(snap.val() || '').trim();
+  return v;
+}
+
 /** @param {string} busId @param {number} odometerEnd */
 async function saveLastOdometerEnd(busId, odometerEnd) {
   const username = getCurrentUsername();
   if (!username || !busId) return;
   await set(odometerStateRef(username, busId), odometerEnd);
+}
+
+/** @param {string} busId @param {string} driverName */
+async function saveLastDriverName(busId, driverName) {
+  const username = getCurrentUsername();
+  const trimmed = String(driverName || '').trim();
+  if (!username || !busId || !trimmed) return;
+  await set(driverNameStateRef(username, busId), trimmed);
 }
 
 /** @param {Omit<LogisticsReport, 'id'|'createdAt'|'updatedAt'> & { id?: string }} report */
@@ -149,6 +171,7 @@ export async function saveLogisticsReport(report) {
   if (report.odometerEnd > 0) {
     await saveLastOdometerEnd(report.busId, report.odometerEnd);
   }
+  await saveLastDriverName(report.busId, report.driverName);
 
   return id;
 }
