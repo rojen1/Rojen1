@@ -116,8 +116,7 @@ body.logistics-print-modal-open {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 5mm;
-    margin-bottom: 0mm;
+    margin: 0mm;
   }
 
   html.logistics-print-active,
@@ -168,7 +167,7 @@ body.logistics-print-modal-open {
     min-height: 100vh !important;
     background: #fff !important;
     margin: 0 !important;
-    padding: 10mm !important;
+    padding: 8mm 10mm !important;
     box-sizing: border-box !important;
     overflow: visible !important;
     font-size: 9.75pt;
@@ -192,9 +191,49 @@ body.logistics-print-modal-open {
     max-width: 100% !important;
     min-height: 100% !important;
     margin: 0 auto !important;
-    padding: 0 !important;
+    padding: 2mm 5mm !important;
     box-sizing: border-box !important;
     transform: none !important;
+    row-gap: 1.2mm;
+  }
+
+  body.logistics-print-active .print-container .title-box {
+    margin-bottom: 2mm !important;
+  }
+
+  body.logistics-print-active .print-container .legal {
+    margin-top: 1mm !important;
+    margin-bottom: 2mm !important;
+  }
+
+  body.logistics-print-active .print-container ol.main {
+    margin-bottom: 2mm !important;
+  }
+
+  body.logistics-print-active .print-container .para3 {
+    margin-bottom: 2.5mm !important;
+  }
+
+  body.logistics-print-active .print-container table.summary {
+    margin-top: 1.5mm !important;
+    margin-bottom: 3mm !important;
+  }
+
+  body.logistics-print-active .print-container .table-title {
+    margin-top: 2mm !important;
+    margin-bottom: 2mm !important;
+  }
+
+  body.logistics-print-active .print-container table.fuel {
+    margin-bottom: 2.5mm !important;
+  }
+
+  body.logistics-print-active .print-container table.vendor-totals {
+    margin-bottom: 3mm !important;
+  }
+
+  body.logistics-print-active .print-container .signatures {
+    margin-top: 2mm !important;
   }
 
   body.logistics-print-active footer {

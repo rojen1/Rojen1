@@ -49,8 +49,8 @@ function vendorTotals(receipts, match) {
   return { liters, sum };
 }
 
-/** Printable area inside @page margin (A4 210×297 mm, margin 5 mm). */
-const PRINT_PAGE_MM = { w: 210, h: 297, margin: 5 };
+/** A4; @page margin 0 — вътрешни полета само на .print-container. */
+const PRINT_PAGE_MM = { w: 210, h: 297, margin: 0 };
 
 function getPrintStyles() {
   return `
@@ -142,8 +142,7 @@ function getPrintStyles() {
   @media print {
     @page {
       size: A4 portrait;
-      margin: ${PRINT_PAGE_MM.margin}mm;
-      margin-bottom: 0mm;
+      margin: 0mm;
     }
     html, body {
       width: 100% !important;
@@ -201,7 +200,7 @@ function getPrintStyles() {
       min-height: 100vh !important;
       background: #fff !important;
       margin: 0 !important;
-      padding: 10mm !important;
+      padding: 8mm 10mm !important;
       box-sizing: border-box !important;
       overflow: visible !important;
       transform: none !important;
@@ -215,10 +214,20 @@ function getPrintStyles() {
       max-width: 100% !important;
       min-height: 100% !important;
       margin: 0 auto !important;
-      padding: 0 !important;
+      padding: 2mm 5mm !important;
       box-sizing: border-box !important;
       transform: none !important;
+      row-gap: 1.2mm;
     }
+    .logistics-print-host .title-box { margin-bottom: 2mm !important; }
+    .logistics-print-host .legal { margin-top: 1mm !important; margin-bottom: 2mm !important; }
+    .logistics-print-host ol.main { margin-bottom: 2mm !important; }
+    .logistics-print-host .para3 { margin-bottom: 2.5mm !important; }
+    .logistics-print-host table.summary { margin-top: 1.5mm !important; margin-bottom: 3mm !important; }
+    .logistics-print-host .table-title { margin-top: 2mm !important; margin-bottom: 2mm !important; }
+    .logistics-print-host table.fuel { margin-bottom: 2.5mm !important; }
+    .logistics-print-host table.vendor-totals { margin-bottom: 3mm !important; }
+    .logistics-print-host .signatures { margin-top: 2mm !important; }
     .print-container,
     .print-container * {
       visibility: visible !important;
