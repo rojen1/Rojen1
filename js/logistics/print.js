@@ -49,31 +49,42 @@ function vendorTotals(receipts, match) {
   return { liters, sum };
 }
 
+/** Printable area inside @page margin (A4 210×297 mm, margin 5 mm). */
+const PRINT_PAGE_MM = { w: 210, h: 297, margin: 5 };
+
 function getPrintStyles() {
   return `
   @page {
     size: A4 portrait;
-    margin: 7mm 9mm;
+    margin: ${PRINT_PAGE_MM.margin}mm;
   }
   html, body {
     margin: 0;
     padding: 0;
     background: #fff;
+    box-sizing: border-box;
   }
+  *, *::before, *::after { box-sizing: border-box; }
   .logistics-print-host,
   .print-container {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 8pt;
-    line-height: 1.1;
+    font-size: 9pt;
+    line-height: 1.12;
     color: #000;
     background: #fff;
+    box-sizing: border-box;
   }
   .logistics-print-host .sheet,
   .print-container .sheet {
-    max-width: 100%;
-    margin: 0 auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box;
     page-break-inside: avoid;
     page-break-after: avoid;
+    transform: scale(1);
+    transform-origin: top left;
   }
   .logistics-print-host .title-box {
     text-align: center; font-weight: bold; font-size: 10pt;
@@ -129,13 +140,21 @@ function getPrintStyles() {
   .logistics-print-host .signatures td { padding: 0.4mm 0; vertical-align: bottom; }
   .logistics-print-host .sig-dots { letter-spacing: 0.1em; }
   @media print {
+    @page {
+      size: A4 portrait;
+      margin: ${PRINT_PAGE_MM.margin}mm;
+      margin-bottom: 0mm;
+    }
     html, body {
-      background: #fff !important;
+      width: 100% !important;
       height: 100% !important;
+      background: #fff !important;
       min-height: 0 !important;
       overflow: hidden !important;
       margin: 0 !important;
       padding: 0 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     body > *:not(.print-container) {
       display: none !important;
@@ -148,23 +167,99 @@ function getPrintStyles() {
     .print-container {
       display: block !important;
       visibility: visible !important;
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
+      position: fixed !important;
+      inset: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-height: 0 !important;
       background: #fff !important;
       margin: 0 !important;
       padding: 0 !important;
+      box-sizing: border-box;
+      overflow: visible !important;
+      transform: none !important;
+    }
+    .print-container .sheet {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box;
+      transform: none !important;
+      transform-origin: top left;
+    }
+    .logistics-print-host table.summary,
+    .print-container table.summary {
+      width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    .logistics-print-host table.fuel,
+    .logistics-print-host table.vendor-totals,
+    .print-container table.fuel,
+    .print-container table.vendor-totals {
+      width: 100% !important;
     }
     .print-container,
     .print-container * {
       visibility: visible !important;
     }
-    button, .btn, nav, header, .no-print {
+    button, .btn, nav, header, .no-print, footer {
       display: none !important;
       visibility: hidden !important;
+      height: 0 !important;
     }
   }`;
+}
+
+/** Пълна ширина на листа @ 100% — без transform scale (iOS print preview). */
+function preparePrintFullWidth() {
+  const host = document.getElementById('logistics-print-host');
+  const sheet = host?.querySelector('.sheet');
+  if (!host || !sheet) return;
+
+  host.style.setProperty('position', 'fixed', 'important');
+  host.style.setProperty('inset', '0', 'important');
+  host.style.setProperty('left', '0', 'important');
+  host.style.setProperty('right', '0', 'important');
+  host.style.setProperty('top', '0', 'important');
+  host.style.setProperty('width', '100%', 'important');
+  host.style.setProperty('max-width', '100%', 'important');
+  host.style.setProperty('margin', '0', 'important');
+  host.style.setProperty('padding', '0', 'important');
+  host.style.setProperty('transform', 'none', 'important');
+
+  sheet.style.setProperty('width', '100%', 'important');
+  sheet.style.setProperty('max-width', '100%', 'important');
+  sheet.style.setProperty('margin', '0', 'important');
+  sheet.style.setProperty('transform', 'none', 'important');
+}
+
+function resetPrintHostLayout() {
+  const host = document.getElementById('logistics-print-host');
+  const sheet = host?.querySelector('.sheet');
+  if (host) {
+    host.style.removeProperty('position');
+    host.style.removeProperty('inset');
+    host.style.removeProperty('left');
+    host.style.removeProperty('right');
+    host.style.removeProperty('top');
+    host.style.removeProperty('width');
+    host.style.removeProperty('max-width');
+    host.style.removeProperty('height');
+    host.style.removeProperty('margin');
+    host.style.removeProperty('padding');
+    host.style.removeProperty('transform');
+  }
+  if (sheet) {
+    sheet.style.removeProperty('width');
+    sheet.style.removeProperty('max-width');
+    sheet.style.removeProperty('margin');
+    sheet.style.removeProperty('transform');
+  }
 }
 
 const PRINT_SKIP_ATTR = 'data-logistics-print-skip';
@@ -303,6 +398,7 @@ function teardownPrintHost() {
   document.body.classList.remove('logistics-print-active');
   document.documentElement.classList.remove('logistics-print-active');
   restoreNonPrintBodyChildren();
+  resetPrintHostLayout();
   const host = document.getElementById('logistics-print-host');
   if (host) {
     host.hidden = true;
@@ -352,7 +448,12 @@ export function printReport(report) {
   };
   window.addEventListener('afterprint', onAfterPrint);
 
-  window.print();
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      preparePrintFullWidth();
+      window.print();
+    });
+  });
 
   setTimeout(() => {
     if (document.body.classList.contains('logistics-print-active')) {
