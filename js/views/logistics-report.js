@@ -333,11 +333,14 @@ export function initLogisticsReportView() {
   document.getElementById('logistics-add-receipt')?.addEventListener('click', () => addReceiptRow());
   document.getElementById('logistics-new-report')?.addEventListener('click', resetNewForm);
 
-  document.getElementById('logistics-scan-receipt')?.addEventListener('click', () => {
-    document.getElementById('logistics-receipt-file')?.click();
+  document.getElementById('logistics-scan-camera')?.addEventListener('click', () => {
+    document.getElementById('logistics-receipt-camera')?.click();
+  });
+  document.getElementById('logistics-scan-gallery')?.addEventListener('click', () => {
+    document.getElementById('logistics-receipt-gallery')?.click();
   });
 
-  document.getElementById('logistics-receipt-file')?.addEventListener('change', async e => {
+  async function handleReceiptFileInput(e) {
     const input = /** @type {HTMLInputElement} */ (e.target);
     const file = input.files?.[0];
     input.value = '';
@@ -350,7 +353,10 @@ export function initLogisticsReportView() {
     } catch (err) {
       toast(err.message || 'Неуспешно сканиране.');
     }
-  });
+  }
+
+  document.getElementById('logistics-receipt-camera')?.addEventListener('change', handleReceiptFileInput);
+  document.getElementById('logistics-receipt-gallery')?.addEventListener('change', handleReceiptFileInput);
 
   document.getElementById('logistics-save')?.addEventListener('click', async () => {
     const report = readFormReport();

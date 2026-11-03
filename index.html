@@ -451,8 +451,10 @@
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
               <h2 class="text-sm font-bold text-navy">Касови бележки (гориво)</h2>
               <div class="flex gap-2">
-                <input type="file" id="logistics-receipt-file" accept="image/*" capture="environment" class="hidden">
-                <button type="button" id="logistics-scan-receipt" class="logistics-btn-sm">📷 AI бележка</button>
+                <input type="file" id="logistics-receipt-camera" accept="image/*" capture="environment" class="hidden">
+                <input type="file" id="logistics-receipt-gallery" accept="image/*" class="hidden">
+                <button type="button" id="logistics-scan-camera" class="logistics-btn-sm">📷 Снимай</button>
+                <button type="button" id="logistics-scan-gallery" class="logistics-btn-sm logistics-btn-secondary">🖼 Галерия</button>
                 <button type="button" id="logistics-add-receipt" class="logistics-btn-sm logistics-btn-secondary">+ Ред</button>
               </div>
             </div>
