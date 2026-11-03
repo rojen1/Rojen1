@@ -49,46 +49,20 @@ function vendorTotals(receipts, match) {
   return { liters, sum };
 }
 
-/** Printable area inside @page margin (A4 210×297 mm, margin 5 mm). */
-const PRINT_PAGE_MM = { w: 210, h: 297, margin: 5 };
-
 function getPrintStyles() {
   return `
-  @page {
-    size: A4 portrait;
-    margin: ${PRINT_PAGE_MM.margin}mm;
-  }
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: #fff;
-    box-sizing: border-box;
-  }
-  *, *::before, *::after { box-sizing: border-box; }
-  .logistics-print-host,
-  .print-container {
+  @page { size: A4 portrait; margin: 10mm; }
+  .logistics-print-host {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 9pt;
+    font-size: 8.5pt;
     line-height: 1.12;
     color: #000;
     background: #fff;
-    box-sizing: border-box;
   }
-  .logistics-print-host .sheet,
-  .print-container .sheet {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    box-sizing: border-box;
-    page-break-inside: avoid;
-    page-break-after: avoid;
-    transform: scale(1);
-    transform-origin: top left;
-  }
+  .logistics-print-host .sheet { max-width: 190mm; margin: 0 auto; }
   .logistics-print-host .title-box {
-    text-align: center; font-weight: bold; font-size: 10pt;
-    border: 1px solid #000; padding: 0.8mm 2mm; margin-bottom: 1mm;
+    text-align: center; font-weight: bold; font-size: 10.5pt;
+    border: 1px solid #000; padding: 1mm 2mm; margin-bottom: 1.5mm;
   }
   .logistics-print-host .field {
     display: inline-block; min-width: 14mm; border: 1px solid #000;
@@ -97,18 +71,18 @@ function getPrintStyles() {
   .logistics-print-host .field.wide { min-width: 46mm; }
   .logistics-print-host .field.km { min-width: 16mm; text-align: center; }
   .logistics-print-host .field.num { min-width: 12mm; text-align: right; }
-  .logistics-print-host .top-row { margin-bottom: 0.5mm; }
-  .logistics-print-host .line { margin: 0.35mm 0; }
-  .logistics-print-host .legal { font-size: 7.5pt; margin: 0.6mm 0 1mm; line-height: 1.12; }
-  .logistics-print-host ol.main { margin: 0 0 0.6mm 4mm; padding: 0 0 0 4mm; }
-  .logistics-print-host ol.main li { margin-bottom: 0.35mm; }
-  .logistics-print-host .para3 { margin: 0.5mm 0 1mm; font-size: 8pt; line-height: 1.12; }
+  .logistics-print-host .top-row { margin-bottom: 0.8mm; }
+  .logistics-print-host .line { margin: 0.5mm 0; }
+  .logistics-print-host .legal { font-size: 8pt; margin: 1mm 0 1.5mm; line-height: 1.15; }
+  .logistics-print-host ol.main { margin: 0 0 1mm 4mm; padding: 0 0 0 4mm; }
+  .logistics-print-host ol.main li { margin-bottom: 0.5mm; }
+  .logistics-print-host .para3 { margin: 0.8mm 0 1.5mm; font-size: 8.5pt; line-height: 1.15; }
   .logistics-print-host table.summary {
-    width: 74%; margin-left: auto; margin-bottom: 1mm;
-    border-collapse: collapse; font-size: 7.5pt;
+    width: 74%; margin-left: auto; margin-bottom: 1.5mm;
+    border-collapse: collapse; font-size: 8pt;
   }
   .logistics-print-host table.summary td {
-    border: 1px solid #000; padding: 0.25mm 1mm; background: #fff;
+    border: 1px solid #000; padding: 0.4mm 1.2mm; background: #fff;
   }
   .logistics-print-host table.summary td.label { text-align: left; font-weight: bold; width: 70%; }
   .logistics-print-host table.summary td.val { text-align: right; font-weight: 600; width: 30%; }
@@ -119,12 +93,12 @@ function getPrintStyles() {
   .logistics-print-host table.vendor-totals {
     width: 100%; border-collapse: collapse; font-size: 8pt;
   }
-  .logistics-print-host table.fuel { margin-bottom: 0.6mm; }
+  .logistics-print-host table.fuel { margin-bottom: 1mm; }
   .logistics-print-host table.fuel th,
   .logistics-print-host table.fuel td,
   .logistics-print-host table.vendor-totals th,
   .logistics-print-host table.vendor-totals td {
-    border: 1px solid #000; padding: 0.2mm 0.8mm; background: #fff; line-height: 1.05;
+    border: 1px solid #000; padding: 0.35mm 1mm; background: #fff; line-height: 1.08;
   }
   .logistics-print-host table.fuel th,
   .logistics-print-host table.vendor-totals th { font-weight: bold; text-align: center; }
@@ -132,110 +106,29 @@ function getPrintStyles() {
   .logistics-print-host table.vendor-totals td.r { text-align: right; }
   .logistics-print-host table.fuel td.c { text-align: center; }
   .logistics-print-host table.vendor-totals {
-    width: 42%; margin-left: auto; margin-bottom: 1mm;
+    width: 42%; margin-left: auto; margin-bottom: 2mm;
   }
   .logistics-print-host .signatures {
-    width: 56%; margin-left: auto; font-size: 8pt; border-collapse: collapse;
+    width: 56%; margin-left: auto; font-size: 8.5pt; border-collapse: collapse;
   }
-  .logistics-print-host .signatures td { padding: 0.4mm 0; vertical-align: bottom; }
+  .logistics-print-host .signatures td { padding: 0.6mm 0; vertical-align: bottom; }
   .logistics-print-host .sig-dots { letter-spacing: 0.1em; }
   @media print {
-    @page {
-      size: A4 portrait;
-      margin: ${PRINT_PAGE_MM.margin}mm;
-      margin-bottom: 0mm;
+    body.logistics-print-active * { visibility: hidden !important; }
+    body.logistics-print-active .logistics-print-host,
+    body.logistics-print-active .logistics-print-host * {
+      visibility: visible !important;
     }
-    html, body {
-      width: 100% !important;
-      height: 100% !important;
-      background: #fff !important;
-      min-height: 0 !important;
-      overflow: hidden !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    body > *:not(.print-container) {
-      display: none !important;
-      visibility: hidden !important;
-      height: 0 !important;
-      min-height: 0 !important;
-      overflow: hidden !important;
-      background: transparent !important;
-    }
-    .logistics-print-host,
-    .print-container {
-      font-size: 9.75pt;
-      line-height: 1.14;
-    }
-    .logistics-print-host .title-box { font-size: 11pt; padding: 0.9mm 2.2mm; }
-    .logistics-print-host .legal { font-size: 8.25pt; }
-    .logistics-print-host .para3 { font-size: 8.75pt; }
-    .logistics-print-host table.summary { font-size: 8.25pt; }
-    .logistics-print-host table.summary td { padding: 0.3mm 1.1mm; }
-    .logistics-print-host table.fuel,
-    .logistics-print-host table.vendor-totals { font-size: 8.75pt; }
-    .logistics-print-host table.fuel th,
-    .logistics-print-host table.fuel td,
-    .logistics-print-host table.vendor-totals th,
-    .logistics-print-host table.vendor-totals td {
-      padding: 0.25mm 0.9mm;
-    }
-    .logistics-print-host .signatures { font-size: 8.75pt; }
-    .print-container {
+    body.logistics-print-active .logistics-print-host {
       display: block !important;
-      visibility: visible !important;
-      position: absolute;
-      left: 0;
-      top: 0;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
       width: 100% !important;
-      max-width: 100% !important;
-      background: #fff !important;
-      margin: 0 auto !important;
       padding: 0 !important;
-      box-sizing: border-box;
-      overflow: visible !important;
-      transform: none !important;
-    }
-    .print-container .sheet {
-      width: 100% !important;
-      max-width: 100% !important;
-      margin: 0 auto !important;
-      padding: 0 !important;
-      box-sizing: border-box;
-      transform: none !important;
-    }
-    .print-container,
-    .print-container * {
-      visibility: visible !important;
-    }
-    button, .btn, nav, header, .no-print, footer {
-      display: none !important;
-      visibility: hidden !important;
-      height: 0 !important;
+      margin: 0 !important;
     }
   }`;
-}
-
-const PRINT_SKIP_ATTR = 'data-logistics-print-skip';
-
-function hideNonPrintBodyChildren() {
-  for (const child of document.body.children) {
-    if (child.classList?.contains('print-container')) continue;
-    if (child.tagName === 'SCRIPT') continue;
-    child.setAttribute(PRINT_SKIP_ATTR, '1');
-    child.style.setProperty('display', 'none', 'important');
-    child.style.setProperty('visibility', 'hidden', 'important');
-  }
-}
-
-function restoreNonPrintBodyChildren() {
-  for (const el of document.querySelectorAll(`[${PRINT_SKIP_ATTR}="1"]`)) {
-    el.removeAttribute(PRINT_SKIP_ATTR);
-    el.style.removeProperty('display');
-    el.style.removeProperty('visibility');
-  }
 }
 
 /** @param {import('./storage.js').LogisticsReport} report */
@@ -352,8 +245,6 @@ function mountPrintHost(report) {
 
 function teardownPrintHost() {
   document.body.classList.remove('logistics-print-active');
-  document.documentElement.classList.remove('logistics-print-active');
-  restoreNonPrintBodyChildren();
   const host = document.getElementById('logistics-print-host');
   if (host) {
     host.hidden = true;
@@ -371,7 +262,7 @@ export function openPrintModal(report) {
     return;
   }
   body.innerHTML =
-    `<div class="logistics-print-host print-container"><style>${getPrintStyles()}</style>${buildPrintSheetHtml(report)}</div>`;
+    `<div class="logistics-print-host"><style>${getPrintStyles()}</style>${buildPrintSheetHtml(report)}</div>`;
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('logistics-print-modal-open');
@@ -391,11 +282,8 @@ export function closePrintModal() {
 /** Печат в същата страница — без window.open (работи на мобилен). */
 /** @param {import('./storage.js').LogisticsReport} report */
 export function printReport(report) {
-  closePrintModal();
   mountPrintHost(report);
-  document.documentElement.classList.add('logistics-print-active');
   document.body.classList.add('logistics-print-active');
-  hideNonPrintBodyChildren();
 
   const onAfterPrint = () => {
     teardownPrintHost();
