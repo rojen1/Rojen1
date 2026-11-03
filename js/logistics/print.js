@@ -148,13 +148,14 @@ function getPrintStyles() {
     html, body {
       width: 100% !important;
       height: 100% !important;
-      background: #fff !important;
-      min-height: 0 !important;
-      overflow: hidden !important;
       margin: 0 !important;
       padding: 0 !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      background: #fff !important;
+    }
+    .print-container,
+    .print-container * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     body > *:not(.print-container) {
       display: none !important;
@@ -183,27 +184,39 @@ function getPrintStyles() {
       padding: 0.25mm 0.9mm;
     }
     .logistics-print-host .signatures { font-size: 8.75pt; }
+    .print-container > style {
+      display: none !important;
+      height: 0 !important;
+    }
     .print-container {
-      display: block !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
       visibility: visible !important;
       position: absolute;
       left: 0;
       top: 0;
       width: 100% !important;
       max-width: 100% !important;
+      min-height: 100vh !important;
       background: #fff !important;
-      margin: 0 auto !important;
-      padding: 0 !important;
-      box-sizing: border-box;
+      margin: 0 !important;
+      padding: 10mm !important;
+      box-sizing: border-box !important;
       overflow: visible !important;
       transform: none !important;
     }
     .print-container .sheet {
+      flex: 1 1 auto;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
       width: 100% !important;
       max-width: 100% !important;
+      min-height: 100% !important;
       margin: 0 auto !important;
       padding: 0 !important;
-      box-sizing: border-box;
+      box-sizing: border-box !important;
       transform: none !important;
     }
     .print-container,
