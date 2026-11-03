@@ -55,7 +55,16 @@ const PRINT_PAGE_MM = { w: 210, h: 297, margin: 0 };
 /** Редове в таблицата „гориво“ като на хартиената бланка. */
 const FUEL_FORM_ROWS = 15;
 
-const PRINT_FIELD_GRAY = '#d1d1d1';
+const PRINT_FIELD_GRAY = '#c8c8c8';
+
+/** @param {string} label @param {string} value */
+function summaryRowHtml(label, value) {
+  const v = value?.trim() ? escapeHtml(value) : '&nbsp;';
+  return `<div class="summary-row">
+    <span class="summary-label">${label}</span>
+    <span class="summary-val">${v}</span>
+  </div>`;
+}
 
 function getPrintStyles() {
   return `
@@ -101,23 +110,26 @@ function getPrintStyles() {
   }
   .logistics-print-host .field {
     display: inline-block;
-    min-width: 14mm;
-    min-height: 4mm;
+    min-width: 12mm;
+    min-height: 4.2mm;
     border: 1px solid #000;
     background: ${PRINT_FIELD_GRAY};
-    padding: 0.2mm 1.2mm;
+    padding: 0.15mm 1mm;
     font-weight: 600;
-    vertical-align: baseline;
+    vertical-align: -0.5mm;
+    line-height: 1.2;
   }
-  .logistics-print-host .field.field-no { min-width: 22mm; }
-  .logistics-print-host .field.field-date { min-width: 28mm; }
-  .logistics-print-host .field.plate { min-width: 22mm; }
-  .logistics-print-host .field.region { min-width: 28mm; }
-  .logistics-print-host .field.wide { min-width: 52mm; }
-  .logistics-print-host .field.km { min-width: 18mm; text-align: center; }
-  .logistics-print-host .field.num { min-width: 14mm; text-align: right; }
-  .logistics-print-host .field.order { min-width: 8mm; }
-  .logistics-print-host .field.date-sm { min-width: 16mm; }
+  .logistics-print-host .field.field-no { min-width: 26mm; }
+  .logistics-print-host .field.field-date { min-width: 32mm; }
+  .logistics-print-host .field.plate { min-width: 24mm; }
+  .logistics-print-host .field.region { min-width: 32mm; }
+  .logistics-print-host .field.wide { min-width: 58mm; }
+  .logistics-print-host .field.period { min-width: 18mm; }
+  .logistics-print-host .field.km { min-width: 20mm; text-align: center; }
+  .logistics-print-host .field.num { min-width: 16mm; text-align: right; }
+  .logistics-print-host .field.order { min-width: 10mm; }
+  .logistics-print-host .field.date-sm { min-width: 18mm; }
+  .logistics-print-host .line.money-line { margin: 0.8mm 0 1.5mm; }
   .logistics-print-host .line { margin: 0.45mm 0; }
   .logistics-print-host .legal {
     font-size: 8pt;
@@ -134,29 +146,36 @@ function getPrintStyles() {
     font-size: 8.5pt;
     line-height: 1.18;
   }
-  .logistics-print-host table.summary {
+  .logistics-print-host .summary-block {
     width: 100%;
-    margin: 0 0 1.5mm;
-    border-collapse: collapse;
-    font-size: 8pt;
+    margin: 1mm 0 2.5mm;
   }
-  .logistics-print-host table.summary td {
-    border: 1px solid #000;
-    padding: 0.35mm 1mm;
-    vertical-align: middle;
+  .logistics-print-host .summary-row {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-end;
+    margin-bottom: 0.55mm;
+    min-height: 5mm;
   }
-  .logistics-print-host table.summary td.label {
+  .logistics-print-host .summary-label {
+    flex: 1 1 auto;
     text-align: left;
     font-weight: bold;
-    width: 68%;
-    background: #fff;
+    font-size: 8pt;
+    padding: 0.6mm 2mm 0.4mm 0;
+    background: transparent;
+    border: none;
   }
-  .logistics-print-host table.summary td.val {
-    text-align: right;
-    font-weight: 600;
-    width: 32%;
+  .logistics-print-host .summary-val {
+    flex: 0 0 52mm;
+    width: 52mm;
+    min-height: 5mm;
+    border: 1px solid #000;
     background: ${PRINT_FIELD_GRAY};
-    min-height: 4.5mm;
+    text-align: right;
+    padding: 0.45mm 1.5mm;
+    font-weight: 600;
+    font-size: 8pt;
   }
   .logistics-print-host .table-title {
     text-align: center;
@@ -186,11 +205,11 @@ function getPrintStyles() {
     background: #fff;
   }
   .logistics-print-host table.fuel tbody tr.fuel-row td {
-    height: 5.2mm;
+    height: 6.2mm;
     vertical-align: middle;
   }
   .logistics-print-host table.fuel tr.fuel-band td {
-    height: 5.5mm;
+    height: 6mm;
     background: ${PRINT_FIELD_GRAY};
     border: 1px solid #000;
     padding: 0;
@@ -199,8 +218,8 @@ function getPrintStyles() {
   .logistics-print-host table.vendor-totals td.r { text-align: right; }
   .logistics-print-host table.fuel td.c { text-align: center; }
   .logistics-print-host table.vendor-totals {
-    width: 44%;
-    margin: 1.5mm 0 2mm auto;
+    width: 48%;
+    margin: 0.5mm 0 3mm auto;
   }
   .logistics-print-host table.vendor-totals th { font-weight: bold; text-align: center; }
   .logistics-print-host table.vendor-totals td.val-gray {
@@ -208,17 +227,25 @@ function getPrintStyles() {
     text-align: right;
   }
   .logistics-print-host .signatures {
-    width: 58%;
-    margin-left: auto;
+    width: 62%;
+    margin: 2mm 0 0 auto;
     font-size: 8.5pt;
     border-collapse: collapse;
   }
   .logistics-print-host .signatures td {
-    padding: 1mm 0;
+    padding: 1.2mm 0;
     vertical-align: bottom;
+    white-space: nowrap;
   }
-  .logistics-print-host .sig-dots { letter-spacing: 0.08em; }
-  .logistics-print-host .sheet-bottom { width: 100%; }
+  .logistics-print-host .signatures td:first-child {
+    width: 18mm;
+    padding-right: 2mm;
+  }
+  .logistics-print-host .sig-dots { letter-spacing: 0.05em; }
+  .logistics-print-host .sheet-bottom {
+    width: 100%;
+    margin-top: 1mm;
+  }
   @media print {
     @page { size: A4 portrait; margin: 0mm; }
     html, body {
@@ -248,19 +275,14 @@ function getPrintStyles() {
       min-height: 100vh !important;
       background: #fff !important;
       margin: 0 !important;
-      padding: 8mm 10mm !important;
+      padding: 11mm 13mm !important;
       box-sizing: border-box !important;
     }
     .print-container .sheet {
-      display: flex !important;
-      flex-direction: column !important;
-      min-height: calc(100vh - 16mm) !important;
+      display: block !important;
       width: 100% !important;
       margin: 0 auto !important;
       padding: 0 !important;
-    }
-    .print-container .sheet-bottom {
-      margin-top: auto !important;
     }
     .print-container,
     .print-container * { visibility: visible !important; }
@@ -346,8 +368,8 @@ function buildPrintSheetHtml(report) {
     регион <span class="field region">${escapeHtml(report.region)}</span></p>
   <p class="line">от (име) <span class="field wide">${escapeHtml(report.driverName)}</span></p>
   <p class="line">
-    за периода от : <span class="field">${formatDateDm(report.periodFrom)}</span>
-    до <span class="field">${formatDateDm(report.periodTo)}</span> г.
+    за периода от : <span class="field period">${formatDateDm(report.periodFrom)}</span>
+    до <span class="field period">${formatDateDm(report.periodTo)}</span> г.
   </p>
   <p class="legal">
     На основание заповед №: <span class="field order">${escapeHtml(orderNo)}</span>
@@ -366,22 +388,26 @@ function buildPrintSheetHtml(report) {
     <span class="field num">${fmtDec(totalLiters, 3)}</span> лт. при норматив
     <span class="field num">${fmtDec(avg, 2)}</span> лт. / 100 км пробег, по цени както следва:
   </p>
-  <table class="summary">
-    <tr><td class="label">ОБЩО ИЗМИНАТИ КИЛОМЕТРИ</td><td class="val">${fmtKm(totalKm)}</td></tr>
-    <tr><td class="label">ОБЩО РАЗХОДВАНО ГОРИВО</td><td class="val">${fmtDec(totalLiters, 3)}</td></tr>
-    <tr><td class="label">ОБЩА СТОЙНОСТ НА ГОРИВОТО</td><td class="val">${fmtDec(totalAmount, 2)}</td></tr>
-    <tr><td class="label">ЗА СМЕТКА НА СЛУЖИТЕЛЯ</td><td class="val">${escapeHtml(report.employeePaid ?? '')}</td></tr>
-    <tr><td class="label">СУМА ЗА ОТЧИТАНЕ</td><td class="val">${escapeHtml(report.amountToReport ?? '')}</td></tr>
-    <tr><td class="label">НАЛИЧНОСТ</td><td class="val">${escapeHtml(report.cashOnHand ?? '')}</td></tr>
-  </table>
+  <p class="line money-line">
+    <span class="field num">&nbsp;</span> лв. X <span class="field num">&nbsp;</span> лв. =
+    <span class="field num">&nbsp;</span> лв.
+  </p>
+  <div class="summary-block">
+    ${summaryRowHtml('ОБЩО ИЗМИНАТИ КИЛОМЕТРИ', fmtKm(totalKm))}
+    ${summaryRowHtml('ОБЩО РАЗХОДВАНО ГОРИВО', fmtDec(totalLiters, 3))}
+    ${summaryRowHtml('ОБЩА СТОЙНОСТ НА ГОРИВОТО', fmtDec(totalAmount, 2))}
+    ${summaryRowHtml('ЗА СМЕТКА НА СЛУЖИТЕЛЯ', report.employeePaid ?? '')}
+    ${summaryRowHtml('СУМА ЗА ОТЧИТАНЕ', report.amountToReport ?? '')}
+    ${summaryRowHtml('НАЛИЧНОСТ', report.cashOnHand ?? '')}
+  </div>
   <div class="table-title">Подробен опис на заредено гориво (по фактури)</div>
   <table class="fuel">
     <thead>
       <tr>
-        <th style="width:28%">Petrol Station</th>
-        <th style="width:14%">Дата</th>
+        <th style="width:30%">Petrol Station</th>
+        <th style="width:12%">Дата</th>
         <th style="width:18%">Количество (лт)</th>
-        <th style="width:18%">Ед. цена</th>
+        <th style="width:18%">Ед.цена</th>
         <th style="width:22%">Сума</th>
       </tr>
     </thead>

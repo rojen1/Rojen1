@@ -161,10 +161,9 @@ body.logistics-print-modal-open {
     top: 0;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 100vh !important;
     background: #fff !important;
     margin: 0 !important;
-    padding: 8mm 10mm !important;
+    padding: 11mm 13mm !important;
     box-sizing: border-box !important;
     overflow: visible !important;
   }
@@ -177,18 +176,12 @@ body.logistics-print-modal-open {
   }
 
   body.logistics-print-active .print-container .sheet {
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: calc(100vh - 16mm) !important;
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 auto !important;
     padding: 0 !important;
     box-sizing: border-box !important;
-  }
-
-  body.logistics-print-active .print-container .sheet-bottom {
-    margin-top: auto !important;
   }
 
   body.logistics-print-active footer {
