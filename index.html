@@ -60,6 +60,7 @@
     };
   </script>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/logistics-report.css">
 </head>
 <body class="bg-cream min-h-screen font-sans text-slate-800 antialiased">
 
@@ -147,8 +148,12 @@
           Дневен Курс
         </button>
         <button id="tab-archive" role="tab" aria-selected="false" data-view="archive"
-          class="flex-1 py-3 text-sm font-semibold transition-colors border-b-2 border-transparent text-white/60 hover:text-white/90">
-          Месечен Архив
+          class="flex-1 py-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 border-transparent text-white/60 hover:text-white/90">
+          Архив
+        </button>
+        <button id="tab-logistics" role="tab" aria-selected="false" data-view="logistics"
+          class="flex-1 py-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 border-transparent text-white/60 hover:text-white/90">
+          Отчет
         </button>
         <button id="tab-admin" role="tab" aria-selected="false" data-view="admin"
           class="hidden flex-1 py-3 text-sm font-semibold transition-colors border-b-2 border-transparent text-white/60 hover:text-white/90">
@@ -354,6 +359,144 @@
 
         <!-- Final Payout Banner -->
         <div id="archive-payout" class="mt-4 rounded-2xl bg-gradient-to-br from-success to-success-dark text-white p-5 shadow-card"></div>
+      </section>
+
+      <!-- Logistics / fuel report -->
+      <section id="view-logistics" class="view-panel hidden px-4 pt-4 pb-safe space-y-4" aria-label="Отчет гориво и километраж">
+        <div class="flex gap-2 bg-white rounded-2xl p-1 border border-navy/10 shadow-card">
+          <button type="button" id="logistics-sub-form" class="logistics-sub-btn logistics-sub-active flex-1">Форма</button>
+          <button type="button" id="logistics-sub-archive" class="logistics-sub-btn flex-1">Архив отчети</button>
+        </div>
+
+        <div id="logistics-panel-form" class="space-y-4">
+          <div class="bg-white rounded-2xl shadow-card p-4 border border-navy/5 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-sm font-bold text-navy">Отчет — бус и шофьор</h2>
+              <button type="button" id="logistics-new-report" class="text-xs font-semibold text-navy">+ Нов</button>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1" for="logistics-bus">Бус</label>
+              <select id="logistics-bus" class="logistics-field"></select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-bus-name">Наименование</label>
+                <input id="logistics-bus-name" type="text" class="logistics-field" placeholder="Бус / модел">
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-plate">Рег. №</label>
+                <input id="logistics-plate" type="text" class="logistics-field" placeholder="CB1234XX">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1" for="logistics-region">Район</label>
+              <input id="logistics-region" type="text" class="logistics-field">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1" for="logistics-driver-name">От (име) — отчел</label>
+              <input id="logistics-driver-name" type="text" class="logistics-field" placeholder="Мартин Христов Димитров" autocomplete="name">
+              <p class="text-[11px] text-slate-400 mt-1">По подразбиране името от профила; може да го смените преди печат.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-period-from">Период от</label>
+                <input id="logistics-period-from" type="date" class="logistics-field">
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-period-to">Период до</label>
+                <input id="logistics-period-to" type="date" class="logistics-field">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-odometer-start">Начален км</label>
+                <input id="logistics-odometer-start" type="number" step="1" class="logistics-field">
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-odometer-end">Краен км</label>
+                <input id="logistics-odometer-end" type="number" step="1" class="logistics-field">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-report-no">No (протокол)</label>
+                <input id="logistics-report-no" type="text" class="logistics-field">
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-report-date">Дата на протокола</label>
+                <input id="logistics-report-date" type="date" class="logistics-field">
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-employee-paid">За сметка на служителя</label>
+                <input id="logistics-employee-paid" type="number" step="0.01" class="logistics-field">
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-amount-report">Сума за отчитане</label>
+                <input id="logistics-amount-report" type="number" step="0.01" class="logistics-field">
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 mb-1" for="logistics-cash-on-hand">Наличност</label>
+                <input id="logistics-cash-on-hand" type="number" step="0.01" class="logistics-field">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1" for="logistics-notes">Бележки</label>
+              <textarea id="logistics-notes" rows="2" class="logistics-field"></textarea>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-card p-4 border border-navy/5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 class="text-sm font-bold text-navy">Касови бележки (гориво)</h2>
+              <div class="flex gap-2">
+                <input type="file" id="logistics-receipt-file" accept="image/*" capture="environment" class="hidden">
+                <button type="button" id="logistics-scan-receipt" class="logistics-btn-sm">📷 AI бележка</button>
+                <button type="button" id="logistics-add-receipt" class="logistics-btn-sm logistics-btn-secondary">+ Ред</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="logistics-table w-full text-xs">
+                <thead>
+                  <tr>
+                    <th>Дата</th>
+                    <th>Станция</th>
+                    <th>Л</th>
+                    <th>€/л</th>
+                    <th>€</th>
+                    <th>км</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="logistics-receipts-body"></tbody>
+              </table>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-4 text-sm">
+              <div class="logistics-stat"><span class="text-slate-500">Изминати км</span><strong id="logistics-total-km">0</strong></div>
+              <div class="logistics-stat"><span class="text-slate-500">Общо литри</span><strong id="logistics-total-liters">0</strong></div>
+              <div class="logistics-stat"><span class="text-slate-500">Обща сума €</span><strong id="logistics-total-amount">0</strong></div>
+              <div class="logistics-stat"><span class="text-slate-500">л/100 км</span><strong id="logistics-avg-consumption">0</strong></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="logistics-save" class="py-3 rounded-xl bg-success text-white font-bold text-sm">Запази отчет</button>
+            <button type="button" id="logistics-print" class="py-3 rounded-xl bg-navy text-white font-bold text-sm">Печат / PDF</button>
+          </div>
+        </div>
+
+        <div id="logistics-panel-archive" class="hidden space-y-3">
+          <div class="bg-white rounded-2xl shadow-card p-4 border border-navy/5 space-y-2">
+            <h2 class="text-sm font-bold text-navy">Филтри</h2>
+            <select id="logistics-filter-bus" class="logistics-field"></select>
+            <div class="grid grid-cols-2 gap-2">
+              <input id="logistics-filter-from" type="date" class="logistics-field" aria-label="От дата">
+              <input id="logistics-filter-to" type="date" class="logistics-field" aria-label="До дата">
+            </div>
+          </div>
+          <div id="logistics-archive-list" class="space-y-2"></div>
+        </div>
       </section>
 
       <!-- Admin Panel (admin only) -->

@@ -1,5 +1,11 @@
 {
   "rules": {
+    "_config": {
+      "gemini": {
+        ".read": true,
+        ".write": false
+      }
+    },
     "accounts": {
       ".read": true,
       ".write": true,
@@ -7,8 +13,24 @@
         "days": {
           ".read": true,
           ".write": true
+        },
+        "logisticsReports": {
+          ".read": true,
+          ".write": true
+        },
+        "logisticsState": {
+          ".read": true,
+          ".write": true
         }
       }
+    },
+    "warehouse": {
+      ".read": true,
+      ".write": true
+    },
+    "sklad": {
+      ".read": true,
+      ".write": true
     }
   }
 }

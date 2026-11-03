@@ -1,8 +1,9 @@
-const CACHE_NAME = 'rojen1-v63';
+const CACHE_NAME = 'rojen1-v65';
 const ASSETS = [
   './',
   './index.html',
   './css/styles.css',
+  './css/logistics-report.css',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './manifest.json',
@@ -26,6 +27,12 @@ const ASSETS = [
   './js/warehouse-sync.js',
   './js/views/daily.js',
   './js/views/archive.js',
+  './js/views/logistics-report.js',
+  './js/logistics/buses.js',
+  './js/logistics/calculations.js',
+  './js/logistics/storage.js',
+  './js/logistics/receipt-vision.js',
+  './js/logistics/print.js',
   './js/views/settings.js',
   './js/views/admin.js'
 ];

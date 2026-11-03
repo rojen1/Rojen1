@@ -22,7 +22,7 @@ export const DEFAULT_SETTINGS = normalizeSettings({
 
 /** @typedef {{ id: string, clientName: string, amount: number, delivered: boolean, createdAt: string, region?: string, isCash?: boolean, cashReported?: boolean, note?: string, fromWarehouse?: boolean, warehouseOrderId?: string, salesRep?: string }} Delivery */
 /** @typedef {{ deliveries: Delivery[], updatedAt: string }} DayRecord */
-/** @typedef {{ grossMonthlySalary: number, bonusRate: number, bonusVatDivisor: number, netCoefficient: number, regions?: string[] }} Settings */
+/** @typedef {{ grossMonthlySalary: number, bonusRate: number, bonusVatDivisor: number, netCoefficient: number, regions?: string[], logisticsBuses?: { id: string, name: string, plate: string, region: string }[] }} Settings */
 /** @typedef {{ role: 'admin' | 'driver', username: string, displayName?: string, disabled?: boolean }} UserProfile */
 /** @typedef {{ settings: Settings, days: Record<string, DayRecord>, profile: UserProfile | null }} AppData */
 

@@ -1,6 +1,7 @@
 import { formatDisplayDate, todayKey } from './calculations.js';
 import { initDailyView, renderDailyView } from './views/daily.js';
 import { initArchiveView, renderArchiveView } from './views/archive.js';
+import { initLogisticsReportView, renderLogisticsReportView } from './views/logistics-report.js';
 import { initSettingsView } from './views/settings.js';
 import { initAdminView, renderAdminView } from './views/admin.js';
 import { initAuth } from './auth.js';
@@ -14,6 +15,7 @@ let appInitialized = false;
 const VIEW_LABELS = {
   daily: 'Дневен Курс',
   archive: 'Месечен Архив',
+  logistics: 'Отчет — гориво и км',
   admin: 'Админ Панел'
 };
 
@@ -27,7 +29,7 @@ function initNavigation() {
   });
 }
 
-/** @param {'daily' | 'archive' | 'admin'} view */
+/** @param {'daily' | 'archive' | 'logistics' | 'admin'} view */
 function switchView(view) {
   activeView = view;
 
@@ -51,6 +53,7 @@ function switchView(view) {
 function refreshActiveView() {
   if (activeView === 'daily') renderDailyView({ preserveScroll: true });
   else if (activeView === 'archive') renderArchiveView();
+  else if (activeView === 'logistics') renderLogisticsReportView();
   else if (activeView === 'admin') renderAdminView();
 }
 
@@ -130,6 +133,7 @@ function initAppShell(role) {
   initNavigation();
   initDailyView({ onDateUpdate: updateHeaderDate, onDeliveryAdded: () => {} });
   initArchiveView();
+  initLogisticsReportView();
   initSettingsView({ onSaved: refreshActiveView });
 
   if (role === 'admin') {

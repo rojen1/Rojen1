@@ -163,7 +163,8 @@ export function normalizeSettings(raw) {
     bonusRate: Number(bonusRate),
     netCoefficient: Number(netCoefficient),
     bonusVatDivisor: Number(bonusVatDivisor),
-    regions: raw?.regions
+    regions: raw?.regions,
+    logisticsBuses: raw?.logisticsBuses
   };
 }
 
