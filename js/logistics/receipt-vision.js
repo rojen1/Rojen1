@@ -6,12 +6,16 @@ const RECEIPT_PROMPT =
   'date (YYYY-MM-DD), vendor, liters (число), unitPrice (€/л), total (€), odometerKm (ако има). ' +
   'Само JSON без markdown.';
 
-/** @returns {Promise<string | null>} */
-async function getGeminiApiKey() {
+/** @returns {Promise<{ apiKey: string, model: string } | null>} */
+async function getGeminiConfig() {
   const snap = await get(ref(getFirebaseDb(), '_config/gemini'));
   if (!snap.exists()) return null;
-  const key = snap.val()?.apiKey;
-  return typeof key === 'string' && key.length > 10 ? key : null;
+  const val = snap.val();
+  const apiKey = val?.apiKey;
+  if (typeof apiKey !== 'string' || apiKey.length < 10) return null;
+  const model =
+    typeof val?.model === 'string' && val.model.length > 3 ? val.model : 'gemini-2.0-flash';
+  return { apiKey, model };
 }
 
 /** @param {File} file */
@@ -33,17 +37,17 @@ function fileToBase64(file) {
  * @returns {Promise<{ date?: string, vendor?: string, liters?: number, unitPrice?: number, total?: number, odometerKm?: number }>}
  */
 export async function extractReceiptFromImage(file) {
-  const apiKey = await getGeminiApiKey();
-  if (!apiKey) {
-    throw new Error('Няма Gemini ключ. Добавете _config/gemini/apiKey в Firebase или въведете ръчно.');
+  const gemini = await getGeminiConfig();
+  if (!gemini) {
+    throw new Error('Няма Gemini ключ. Добавете _config/gemini в Firebase или въведете ръчно.');
   }
 
   const base64 = await fileToBase64(file);
   const mime = file.type || 'image/jpeg';
 
   const url =
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' +
-    encodeURIComponent(apiKey);
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(gemini.model)}:generateContent?key=` +
+    encodeURIComponent(gemini.apiKey);
 
   const res = await fetch(url, {
     method: 'POST',
