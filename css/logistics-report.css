@@ -99,22 +99,61 @@
     print-color-adjust: exact !important;
   }
 
+  body.logistics-print-active .print-container,
+  body.logistics-print-active .print-container .line,
+  body.logistics-print-active .print-container .legal,
+  body.logistics-print-active .print-container .para3,
+  body.logistics-print-active .print-container ol.main,
+  body.logistics-print-active .print-container table {
+    color: #000 !important;
+  }
+
+  body.logistics-print-active .print-container .shade,
+  body.logistics-print-active .print-container .summary td.val,
+  body.logistics-print-active .print-container table.vendor-totals td.r {
+    background: #d9d9d9 !important;
+    color: #000 !important;
+    border-color: #999 !important;
+  }
+
   body.logistics-print-active .print-container > style {
     display: none !important;
   }
 }
 
 @media screen {
-  body.logistics-print-active .print-container {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    margin: -1px !important;
-    padding: 0 !important;
+  body.logistics-print-active {
     overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
+    background: #fff !important;
+  }
+
+  html.logistics-print-active {
+    background: #fff !important;
+  }
+
+  body.logistics-print-active .print-container {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483646 !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right))
+      max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left)) !important;
+    overflow: auto !important;
+    clip: auto !important;
+    clip-path: none !important;
+    -webkit-clip-path: none !important;
+    white-space: normal !important;
     border: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  body.logistics-print-active .print-container .sheet {
+    max-width: 210mm;
+    margin: 0 auto;
   }
 }
 

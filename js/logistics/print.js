@@ -50,28 +50,25 @@ function vendorTotals(receipts, match) {
 }
 
 function getPrintStyles() {
+  const root = '.print-container';
   return `
   @page { size: A4 portrait; margin: 10mm; }
-  * { box-sizing: border-box; }
-  html, body {
-    width: 210mm;
-    height: 297mm;
-    margin: 0;
-    padding: 0;
-  }
-  body {
+  ${root} {
+    display: block;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 9pt;
     color: #000;
     line-height: 1.15;
+    background: #fff;
   }
-  .sheet {
+  ${root} * { box-sizing: border-box; }
+  ${root} .sheet {
     width: 190mm;
     max-height: 277mm;
     margin: 0 auto;
     overflow: hidden;
   }
-  .title-box {
+  ${root} .title-box {
     text-align: center;
     font-weight: bold;
     font-size: 11pt;
@@ -80,7 +77,7 @@ function getPrintStyles() {
     margin-bottom: 2mm;
     letter-spacing: 0.02em;
   }
-  .shade {
+  ${root} .shade {
     display: inline-block;
     min-width: 16mm;
     background: #d9d9d9;
@@ -88,99 +85,95 @@ function getPrintStyles() {
     border: 1px solid #999;
     vertical-align: baseline;
   }
-  .shade.wide { min-width: 48mm; }
-  .shade.km { min-width: 18mm; text-align: center; }
-  .shade.num { min-width: 14mm; text-align: right; }
-  .top-row { margin-bottom: 1mm; }
-  .line { margin: 0.8mm 0; }
-  .legal { font-size: 8.5pt; margin: 1.5mm 0 2mm; line-height: 1.2; }
-  ol.main { margin: 0 0 1.5mm 4mm; padding: 0 0 0 4mm; }
-  ol.main li { margin-bottom: 0.8mm; }
-  .para3 { margin: 1mm 0 2mm 0; font-size: 9pt; line-height: 1.2; }
-  .summary {
+  ${root} .shade.wide { min-width: 48mm; }
+  ${root} .shade.km { min-width: 18mm; text-align: center; }
+  ${root} .shade.num { min-width: 14mm; text-align: right; }
+  ${root} .top-row { margin-bottom: 1mm; }
+  ${root} .line { margin: 0.8mm 0; }
+  ${root} .legal { font-size: 8.5pt; margin: 1.5mm 0 2mm; line-height: 1.2; }
+  ${root} ol.main { margin: 0 0 1.5mm 4mm; padding: 0 0 0 4mm; }
+  ${root} ol.main li { margin-bottom: 0.8mm; }
+  ${root} .para3 { margin: 1mm 0 2mm 0; font-size: 9pt; line-height: 1.2; }
+  ${root} .summary {
     width: 72%;
     margin-left: auto;
     margin-bottom: 2mm;
     border-collapse: collapse;
     font-size: 8.5pt;
   }
-  .summary td {
+  ${root} .summary td {
     border: 1px solid #000;
     padding: 0.6mm 1.5mm;
     vertical-align: middle;
   }
-  .summary td.label {
+  ${root} .summary td.label {
     font-weight: bold;
     width: 68%;
   }
-  .summary td.val {
+  ${root} .summary td.val {
     width: 32%;
     background: #d9d9d9;
     text-align: right;
     font-weight: bold;
   }
-  .table-title {
+  ${root} .table-title {
     text-align: center;
     font-weight: bold;
     margin: 1.5mm 0 1mm;
     font-size: 9pt;
   }
-  table.fuel {
+  ${root} table.fuel {
     width: 100%;
     border-collapse: collapse;
     font-size: 8.5pt;
     margin-bottom: 1.5mm;
   }
-  table.fuel th, table.fuel td {
+  ${root} table.fuel th, ${root} table.fuel td {
     border: 1px solid #000;
     padding: 0.45mm 1.2mm;
     line-height: 1.1;
   }
-  table.fuel tr.fuel-empty td {
+  ${root} table.fuel tr.fuel-empty td {
     height: 4mm;
     padding: 0.2mm 1.2mm;
   }
-  table.fuel th {
+  ${root} table.fuel th {
     font-weight: bold;
     text-align: center;
     background: #fff;
   }
-  table.fuel td.r { text-align: right; }
-  table.fuel td.c { text-align: center; }
-  table.vendor-totals {
+  ${root} table.fuel td.r { text-align: right; }
+  ${root} table.fuel td.c { text-align: center; }
+  ${root} table.vendor-totals {
     width: 45%;
     margin-left: auto;
     border-collapse: collapse;
     font-size: 8.5pt;
     margin-bottom: 3mm;
   }
-  table.vendor-totals td, table.vendor-totals th {
+  ${root} table.vendor-totals td, ${root} table.vendor-totals th {
     border: 1px solid #000;
     padding: 0.5mm 1.5mm;
   }
-  table.vendor-totals th { font-weight: bold; text-align: center; }
-  table.vendor-totals td.r { text-align: right; background: #d9d9d9; font-weight: bold; }
-  .signatures {
+  ${root} table.vendor-totals th { font-weight: bold; text-align: center; }
+  ${root} table.vendor-totals td.r { text-align: right; background: #d9d9d9; font-weight: bold; }
+  ${root} .signatures {
     width: 58%;
     margin-left: auto;
     font-size: 9pt;
     border-collapse: collapse;
   }
-  .signatures td { padding: 1mm 0; vertical-align: bottom; }
-  .sig-dots {
+  ${root} .signatures td { padding: 1mm 0; vertical-align: bottom; }
+  ${root} .sig-dots {
     letter-spacing: 0.12em;
     white-space: nowrap;
   }
   @media print {
-    html, body {
-      width: auto;
-      height: auto;
-    }
-    body {
+    ${root} {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .sheet {
+    ${root} .sheet {
       max-height: none;
       overflow: visible;
       page-break-inside: avoid;
@@ -383,15 +376,26 @@ export function printReport(report) {
   document.body.classList.add('logistics-print-active');
   hideNonPrintBodyChildren();
 
+  let cleaned = false;
   const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
     teardownPrintHost();
     window.removeEventListener('afterprint', cleanup);
+    window.removeEventListener('focus', onFocusAfterPrint);
+    document.removeEventListener('visibilitychange', onVisibilityAfterPrint);
+  };
+  const onFocusAfterPrint = () => cleanup();
+  const onVisibilityAfterPrint = () => {
+    if (document.visibilityState === 'visible') cleanup();
   };
   window.addEventListener('afterprint', cleanup);
+  window.addEventListener('focus', onFocusAfterPrint);
+  document.addEventListener('visibilitychange', onVisibilityAfterPrint);
   window.print();
   setTimeout(() => {
     if (document.body.classList.contains('logistics-print-active')) cleanup();
-  }, 1500);
+  }, 3000);
 }
 
 /** @param {string} s */
