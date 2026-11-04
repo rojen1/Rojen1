@@ -347,9 +347,20 @@ function restoreNonPrintBodyChildren() {
   }
 }
 
+function applyPrintPageBackground() {
+  document.documentElement.style.setProperty('background', '#ffffff', 'important');
+  document.body.style.setProperty('background', '#ffffff', 'important');
+}
+
+function restorePrintPageBackground() {
+  document.documentElement.style.removeProperty('background');
+  document.body.style.removeProperty('background');
+}
+
 function teardownPrintHost() {
   document.body.classList.remove('logistics-print-active');
   document.documentElement.classList.remove('logistics-print-active');
+  restorePrintPageBackground();
   restoreNonPrintBodyChildren();
   const host = document.getElementById('logistics-print-host');
   if (host) {
@@ -374,6 +385,7 @@ export function printReport(report) {
   mountPrintHost(report);
   document.documentElement.classList.add('logistics-print-active');
   document.body.classList.add('logistics-print-active');
+  applyPrintPageBackground();
   hideNonPrintBodyChildren();
 
   let cleaned = false;

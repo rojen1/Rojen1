@@ -66,11 +66,19 @@
 }
 
 @media print {
+  html[data-theme="dark"].logistics-print-active,
+  html[data-theme="dark"].logistics-print-active body,
+  [data-theme="dark"] body.logistics-print-active {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
   html.logistics-print-active,
   html.logistics-print-active body,
   body.logistics-print-active {
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
@@ -83,13 +91,14 @@
   body.logistics-print-active .print-container {
     display: block !important;
     visibility: visible !important;
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: static !important;
     width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
+    page-break-after: avoid;
   }
 
   body.logistics-print-active .print-container,
@@ -122,22 +131,30 @@
 }
 
 @media screen {
+  html[data-theme="dark"].logistics-print-active,
+  html[data-theme="dark"].logistics-print-active body,
+  [data-theme="dark"] body.logistics-print-active {
+    background: #fff !important;
+  }
+
   body.logistics-print-active {
     overflow: hidden !important;
     background: #fff !important;
+    min-height: 100dvh !important;
   }
 
   html.logistics-print-active {
     background: #fff !important;
+    min-height: 100% !important;
   }
 
   body.logistics-print-active .print-container {
     position: fixed !important;
     inset: 0 !important;
     z-index: 2147483646 !important;
-    width: auto !important;
-    height: auto !important;
+    width: 100% !important;
     max-width: none !important;
+    min-height: 100dvh !important;
     margin: 0 !important;
     padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right))
       max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left)) !important;
@@ -149,6 +166,7 @@
     border: 0 !important;
     background: #fff !important;
     color: #000 !important;
+    box-sizing: border-box !important;
   }
 
   body.logistics-print-active .print-container .sheet {
