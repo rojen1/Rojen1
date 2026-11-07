@@ -82,7 +82,8 @@ function getPrintStyles() {
     min-width: 16mm;
     background: #d9d9d9;
     padding: 0.2mm 1.5mm;
-    border: 1px solid #999;
+    border: 1px solid #666;
+    color: #000;
     vertical-align: baseline;
   }
   ${root} .shade.wide { min-width: 48mm; }
@@ -170,14 +171,47 @@ function getPrintStyles() {
   }
   @media print {
     ${root} {
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      color: #000 !important;
+      background: #fff !important;
+      -webkit-print-color-adjust: economy;
+      print-color-adjust: economy;
+    }
+    ${root} *,
+    ${root} *::before,
+    ${root} *::after {
+      color: #000 !important;
+      -webkit-text-fill-color: #000 !important;
+      opacity: 1 !important;
+      text-shadow: none !important;
+      filter: none !important;
+      -webkit-print-color-adjust: economy;
+      print-color-adjust: economy;
     }
     ${root} .sheet {
       max-height: none;
       overflow: visible;
       page-break-inside: avoid;
       page-break-after: avoid;
+    }
+    ${root} .shade,
+    ${root} .summary td.val,
+    ${root} table.vendor-totals td.r {
+      background: #fff !important;
+      color: #000 !important;
+      border: 0.75pt solid #000 !important;
+      box-shadow: none !important;
+    }
+    ${root} .title-box,
+    ${root} .summary td,
+    ${root} table.fuel th,
+    ${root} table.fuel td,
+    ${root} table.vendor-totals th,
+    ${root} table.vendor-totals td {
+      border-color: #000 !important;
+      border-width: 0.75pt !important;
+    }
+    ${root} table.fuel th {
+      background: #fff !important;
     }
   }`;
 }

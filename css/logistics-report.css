@@ -104,8 +104,13 @@
   body.logistics-print-active .print-container,
   body.logistics-print-active .print-container * {
     visibility: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  }
+
+  [data-theme="dark"] body.logistics-print-active .print-container,
+  [data-theme="dark"] body.logistics-print-active .print-container * {
+    color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
+    opacity: 1 !important;
   }
 
   body.logistics-print-active .print-container,
@@ -113,16 +118,26 @@
   body.logistics-print-active .print-container .legal,
   body.logistics-print-active .print-container .para3,
   body.logistics-print-active .print-container ol.main,
-  body.logistics-print-active .print-container table {
+  body.logistics-print-active .print-container table,
+  body.logistics-print-active .print-container td,
+  body.logistics-print-active .print-container th,
+  body.logistics-print-active .print-container span {
     color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
   }
 
   body.logistics-print-active .print-container .shade,
   body.logistics-print-active .print-container .summary td.val,
   body.logistics-print-active .print-container table.vendor-totals td.r {
-    background: #d9d9d9 !important;
+    background: #fff !important;
     color: #000 !important;
-    border-color: #999 !important;
+    border: 0.75pt solid #000 !important;
+    -webkit-print-color-adjust: economy !important;
+    print-color-adjust: economy !important;
+  }
+
+  body.logistics-print-active .print-container table.fuel th {
+    background: #fff !important;
   }
 
   body.logistics-print-active .print-container > style {
