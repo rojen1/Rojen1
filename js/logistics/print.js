@@ -49,11 +49,15 @@ function vendorTotals(receipts, match) {
   return { liters, sum };
 }
 
-function getPrintStyles() {
-  const root = '.print-container';
+/**
+ * @param {string} [wrapper] '.print-container' за in-page preview; празно = самостоятелен документ
+ */
+function buildPrintCss(wrapper) {
+  const self = wrapper || 'html, body';
+  const p = wrapper ? `${wrapper} ` : '';
   return `
   @page { size: A4 portrait; margin: 10mm; }
-  ${root} {
+  ${self} {
     display: block;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 9pt;
@@ -61,14 +65,14 @@ function getPrintStyles() {
     line-height: 1.15;
     background: #fff;
   }
-  ${root} * { box-sizing: border-box; }
-  ${root} .sheet {
+  ${p}* { box-sizing: border-box; }
+  ${p}.sheet {
     width: 190mm;
     max-height: 277mm;
     margin: 0 auto;
     overflow: hidden;
   }
-  ${root} .title-box {
+  ${p}.title-box {
     text-align: center;
     font-weight: bold;
     font-size: 11pt;
@@ -77,7 +81,7 @@ function getPrintStyles() {
     margin-bottom: 2mm;
     letter-spacing: 0.02em;
   }
-  ${root} .shade {
+  ${p}.shade {
     display: inline-block;
     min-width: 16mm;
     background: #d9d9d9;
@@ -86,99 +90,97 @@ function getPrintStyles() {
     color: #000;
     vertical-align: baseline;
   }
-  ${root} .shade.wide { min-width: 48mm; }
-  ${root} .shade.km { min-width: 18mm; text-align: center; }
-  ${root} .shade.num { min-width: 14mm; text-align: right; }
-  ${root} .top-row { margin-bottom: 1mm; }
-  ${root} .line { margin: 0.8mm 0; }
-  ${root} .legal { font-size: 8.5pt; margin: 1.5mm 0 2mm; line-height: 1.2; }
-  ${root} ol.main { margin: 0 0 1.5mm 4mm; padding: 0 0 0 4mm; }
-  ${root} ol.main li { margin-bottom: 0.8mm; }
-  ${root} .para3 { margin: 1mm 0 2mm 0; font-size: 9pt; line-height: 1.2; }
-  ${root} .summary {
+  ${p}.shade.wide { min-width: 48mm; }
+  ${p}.shade.km { min-width: 18mm; text-align: center; }
+  ${p}.shade.num { min-width: 14mm; text-align: right; }
+  ${p}.top-row { margin-bottom: 1mm; }
+  ${p}.line { margin: 0.8mm 0; }
+  ${p}.legal { font-size: 8.5pt; margin: 1.5mm 0 2mm; line-height: 1.2; }
+  ${p}ol.main { margin: 0 0 1.5mm 4mm; padding: 0 0 0 4mm; }
+  ${p}ol.main li { margin-bottom: 0.8mm; }
+  ${p}.para3 { margin: 1mm 0 2mm 0; font-size: 9pt; line-height: 1.2; }
+  ${p}.summary {
     width: 72%;
     margin-left: auto;
     margin-bottom: 2mm;
     border-collapse: collapse;
     font-size: 8.5pt;
   }
-  ${root} .summary td {
+  ${p}.summary td {
     border: 1px solid #000;
     padding: 0.6mm 1.5mm;
     vertical-align: middle;
   }
-  ${root} .summary td.label {
+  ${p}.summary td.label {
     font-weight: bold;
     width: 68%;
   }
-  ${root} .summary td.val {
+  ${p}.summary td.val {
     width: 32%;
     background: #d9d9d9;
     text-align: right;
     font-weight: bold;
   }
-  ${root} .table-title {
+  ${p}.table-title {
     text-align: center;
     font-weight: bold;
     margin: 1.5mm 0 1mm;
     font-size: 9pt;
   }
-  ${root} table.fuel {
+  ${p}table.fuel {
     width: 100%;
     border-collapse: collapse;
     font-size: 8.5pt;
     margin-bottom: 1.5mm;
   }
-  ${root} table.fuel th, ${root} table.fuel td {
+  ${p}table.fuel th, ${p}table.fuel td {
     border: 1px solid #000;
     padding: 0.45mm 1.2mm;
     line-height: 1.1;
   }
-  ${root} table.fuel tr.fuel-empty td {
+  ${p}table.fuel tr.fuel-empty td {
     height: 4mm;
     padding: 0.2mm 1.2mm;
   }
-  ${root} table.fuel th {
+  ${p}table.fuel th {
     font-weight: bold;
     text-align: center;
     background: #fff;
   }
-  ${root} table.fuel td.r { text-align: right; }
-  ${root} table.fuel td.c { text-align: center; }
-  ${root} table.vendor-totals {
+  ${p}table.fuel td.r { text-align: right; }
+  ${p}table.fuel td.c { text-align: center; }
+  ${p}table.vendor-totals {
     width: 45%;
     margin-left: auto;
     border-collapse: collapse;
     font-size: 8.5pt;
     margin-bottom: 3mm;
   }
-  ${root} table.vendor-totals td, ${root} table.vendor-totals th {
+  ${p}table.vendor-totals td, ${p}table.vendor-totals th {
     border: 1px solid #000;
     padding: 0.5mm 1.5mm;
   }
-  ${root} table.vendor-totals th { font-weight: bold; text-align: center; }
-  ${root} table.vendor-totals td.r { text-align: right; background: #d9d9d9; font-weight: bold; }
-  ${root} .signatures {
+  ${p}table.vendor-totals th { font-weight: bold; text-align: center; }
+  ${p}table.vendor-totals td.r { text-align: right; background: #d9d9d9; font-weight: bold; }
+  ${p}.signatures {
     width: 58%;
     margin-left: auto;
     font-size: 9pt;
     border-collapse: collapse;
   }
-  ${root} .signatures td { padding: 1mm 0; vertical-align: bottom; }
-  ${root} .sig-dots {
+  ${p}.signatures td { padding: 1mm 0; vertical-align: bottom; }
+  ${p}.sig-dots {
     letter-spacing: 0.12em;
     white-space: nowrap;
   }
   @media print {
-    ${root} {
+    ${self} {
       color: #000 !important;
       background: #fff !important;
       -webkit-print-color-adjust: economy;
       print-color-adjust: economy;
     }
-    ${root} *,
-    ${root} *::before,
-    ${root} *::after {
+    ${p}*, ${p}*::before, ${p}*::after {
       color: #000 !important;
       -webkit-text-fill-color: #000 !important;
       opacity: 1 !important;
@@ -187,33 +189,35 @@ function getPrintStyles() {
       -webkit-print-color-adjust: economy;
       print-color-adjust: economy;
     }
-    ${root} .sheet {
+    ${p}.sheet {
       max-height: none;
       overflow: visible;
       page-break-inside: avoid;
       page-break-after: avoid;
     }
-    ${root} .shade,
-    ${root} .summary td.val,
-    ${root} table.vendor-totals td.r {
+    ${p}.shade, ${p}.summary td.val, ${p}table.vendor-totals td.r {
       background: #fff !important;
       color: #000 !important;
       border: 0.75pt solid #000 !important;
       box-shadow: none !important;
     }
-    ${root} .title-box,
-    ${root} .summary td,
-    ${root} table.fuel th,
-    ${root} table.fuel td,
-    ${root} table.vendor-totals th,
-    ${root} table.vendor-totals td {
+    ${p}.title-box, ${p}.summary td, ${p}table.fuel th, ${p}table.fuel td,
+    ${p}table.vendor-totals th, ${p}table.vendor-totals td {
       border-color: #000 !important;
       border-width: 0.75pt !important;
     }
-    ${root} table.fuel th {
+    ${p}table.fuel th {
       background: #fff !important;
     }
   }`;
+}
+
+function getPrintHostStyles() {
+  return buildPrintCss('.print-container');
+}
+
+function getPrintDocumentStyles() {
+  return buildPrintCss('');
 }
 
 /** @param {import('./storage.js').LogisticsReport} report */
@@ -353,14 +357,67 @@ export function buildPrintDocumentHtml(report) {
 <html lang="bg">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light only">
 <title>ОТЧЕТ-ПРОТОКОЛ ${escapeHtml(report.plate)}</title>
-<style>${getPrintStyles()}</style>
+<style>${getPrintDocumentStyles()}</style>
 </head>
 <body>
 ${buildPrintSheetHtml(report)}
-<script>window.onload=function(){window.focus();window.print();};</script>
 </body>
 </html>`;
+}
+
+const LOGISTICS_PRINT_IFRAME_ID = 'logistics-print-iframe';
+
+function removePrintIframe() {
+  document.getElementById(LOGISTICS_PRINT_IFRAME_ID)?.remove();
+}
+
+/** Изолиран документ — без Tailwind/тъмна тема от основната страница (Chrome). */
+function printReportViaIframe(report) {
+  removePrintIframe();
+  const iframe = document.createElement('iframe');
+  iframe.id = LOGISTICS_PRINT_IFRAME_ID;
+  iframe.setAttribute('title', 'Печат отчет');
+  iframe.setAttribute('aria-hidden', 'true');
+  iframe.style.cssText =
+    'position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none;left:0;bottom:0';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument;
+  if (!doc) throw new Error('Неуспешен печат (iframe).');
+  doc.open();
+  doc.write(buildPrintDocumentHtml(report));
+  doc.close();
+
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    removePrintIframe();
+    try {
+      iframe.contentWindow?.removeEventListener('afterprint', cleanup);
+    } catch {
+      /* cross-origin unlikely */
+    }
+  };
+
+  const runPrint = () => {
+    try {
+      const win = iframe.contentWindow;
+      if (!win) throw new Error('Няма прозорец за печат.');
+      win.addEventListener('afterprint', cleanup);
+      win.focus();
+      win.print();
+    } catch (err) {
+      cleanup();
+      throw err;
+    }
+    setTimeout(cleanup, 8000);
+  };
+
+  if (doc.readyState === 'complete') runPrint();
+  else iframe.onload = () => runPrint();
 }
 
 const PRINT_SKIP_ATTR = 'data-logistics-print-skip';
@@ -408,40 +465,15 @@ function mountPrintHost(report) {
   const host = document.getElementById('logistics-print-host');
   if (!host) throw new Error('Липсва елемент за печат.');
   host.className = 'logistics-print-host print-container';
-  host.innerHTML = `<style>${getPrintStyles()}</style>${buildPrintSheetHtml(report)}`;
+  host.innerHTML = `<style>${getPrintHostStyles()}</style>${buildPrintSheetHtml(report)}`;
   host.hidden = false;
   host.removeAttribute('aria-hidden');
 }
 
-/** Същият шаблон, in-page — без pop-up (не блокира PWA). */
+/** Печат от iframe (чист CSS). In-page preview при нужда: mountPrintHost + logistics-print-active. */
 /** @param {import('./storage.js').LogisticsReport} report */
 export function printReport(report) {
-  mountPrintHost(report);
-  document.documentElement.classList.add('logistics-print-active');
-  document.body.classList.add('logistics-print-active');
-  applyPrintPageBackground();
-  hideNonPrintBodyChildren();
-
-  let cleaned = false;
-  const cleanup = () => {
-    if (cleaned) return;
-    cleaned = true;
-    teardownPrintHost();
-    window.removeEventListener('afterprint', cleanup);
-    window.removeEventListener('focus', onFocusAfterPrint);
-    document.removeEventListener('visibilitychange', onVisibilityAfterPrint);
-  };
-  const onFocusAfterPrint = () => cleanup();
-  const onVisibilityAfterPrint = () => {
-    if (document.visibilityState === 'visible') cleanup();
-  };
-  window.addEventListener('afterprint', cleanup);
-  window.addEventListener('focus', onFocusAfterPrint);
-  document.addEventListener('visibilitychange', onVisibilityAfterPrint);
-  window.print();
-  setTimeout(() => {
-    if (document.body.classList.contains('logistics-print-active')) cleanup();
-  }, 3000);
+  printReportViaIframe(report);
 }
 
 /** @param {string} s */
