@@ -67,7 +67,7 @@
 
 @page {
   size: A4 portrait;
-  margin: 0;
+  margin: 12mm;
 }
 
 @media print {

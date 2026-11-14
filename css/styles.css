@@ -1005,21 +1005,23 @@ body {
  * Печат: само съдържание на формуляра.
  * URL, дата, час и заглавие по ръбовете идват от браузъра (Chrome „Headers and footers“).
  * CSS няма официален начин да ги махне — изключи колонтитулите в диалога за печат.
- * Нулеви @page margins оставят максимално място за бланката; вътрешните отстъпи са на body.
+ * @page margin 12mm — безопасна зона за принтер; ширината на бланката е 100% в рамките на листа.
  */
 @page {
   size: A4 portrait;
-  margin: 0;
+  margin: 12mm;
 }
 
 @media print {
   html,
   body {
     margin: 0 !important;
-    padding: 10mm !important;
-    width: auto !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
+    box-sizing: border-box !important;
     background: #fff !important;
     color: #000 !important;
     -webkit-print-color-adjust: economy;

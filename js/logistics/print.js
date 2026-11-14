@@ -55,8 +55,9 @@ function vendorTotals(receipts, match) {
 function buildPrintCss(wrapper) {
   const self = wrapper || 'html, body';
   const p = wrapper ? `${wrapper} ` : '';
+  const pageMargin = '12mm';
   return `
-  @page { size: A4 portrait; margin: 0; }
+  @page { size: A4 portrait; margin: ${pageMargin}; }
   ${self} {
     display: block;
     font-family: Arial, Helvetica, sans-serif;
@@ -65,14 +66,17 @@ function buildPrintCss(wrapper) {
     line-height: 1.15;
     background: #fff;
     margin: 0;
-    padding: 10mm;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   ${p}* { box-sizing: border-box; }
   ${p}.sheet {
-    width: 190mm;
-    max-height: 277mm;
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
-    overflow: hidden;
+    overflow: visible;
   }
   ${p}.title-box {
     text-align: center;
@@ -131,9 +135,15 @@ function buildPrintCss(wrapper) {
   }
   ${p}table.fuel {
     width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 8.5pt;
     margin-bottom: 1.5mm;
+  }
+  ${p}table.fuel td, ${p}table.fuel th {
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
   }
   ${p}table.fuel th, ${p}table.fuel td {
     border: 1px solid #000;
@@ -191,11 +201,26 @@ function buildPrintCss(wrapper) {
       -webkit-print-color-adjust: economy;
       print-color-adjust: economy;
     }
+    ${self} {
+      padding: 0 !important;
+    }
     ${p}.sheet {
       max-height: none;
       overflow: visible;
+      page-break-inside: auto;
+      page-break-after: auto;
+    }
+    ${p}table.fuel thead {
+      display: table-header-group;
+    }
+    ${p}table.fuel tr {
       page-break-inside: avoid;
-      page-break-after: avoid;
+      page-break-after: auto;
+    }
+    ${p}.signatures,
+    ${p}.title-box,
+    ${p}.summary {
+      page-break-inside: avoid;
     }
     ${p}.shade, ${p}.summary td.val, ${p}table.vendor-totals td.r {
       background: #fff !important;
