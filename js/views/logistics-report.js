@@ -314,9 +314,10 @@ function renderArchiveList() {
           <p class="font-semibold text-navy">${escapeHtml(r.driverName)} · ${escapeHtml(r.plate)}</p>
           <p class="text-xs text-slate-500">${escapeHtml(r.periodFrom)} — ${escapeHtml(r.periodTo)} · ${km.toFixed(0)} км</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2 justify-end">
           <button type="button" class="logistics-btn-sm" data-print-id="${escapeHtml(r.id)}">Печат</button>
           <button type="button" class="logistics-btn-sm logistics-btn-secondary" data-edit-id="${escapeHtml(r.id)}">Отвори</button>
+          <button type="button" class="logistics-btn-sm logistics-btn-danger" data-delete-id="${escapeHtml(r.id)}">Изтрий</button>
         </div>
       </article>`;
     })
@@ -341,6 +342,23 @@ function renderArchiveList() {
       const id = btn.getAttribute('data-edit-id');
       const rep = archiveReports.find(x => x.id === id);
       if (rep) fillFormFromReport(rep);
+    });
+  });
+
+  list.querySelectorAll('[data-delete-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-delete-id');
+      const rep = archiveReports.find(x => x.id === id);
+      if (!rep) return;
+      const label = `${rep.plate || 'бус'} · ${rep.periodFrom} — ${rep.periodTo}`;
+      if (!confirm(`Да изтрия ли отчета (${label})?\n\nДействието не може да се отмени.`)) return;
+      try {
+        await deleteLogisticsReport(id);
+        if (editingReportId === id) resetNewForm();
+        toast('Отчетът е изтрит.');
+      } catch (err) {
+        toast(err.message || 'Грешка при изтриване.');
+      }
     });
   });
 }

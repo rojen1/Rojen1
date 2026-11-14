@@ -61,6 +61,12 @@
   color: #1e3a5f;
 }
 
+.logistics-btn-danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
 .logistics-print-host[hidden] {
   display: none !important;
 }
