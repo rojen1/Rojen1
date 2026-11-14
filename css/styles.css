@@ -624,6 +624,16 @@ body {
   border: 1px solid #fcd34d;
 }
 
+.warehouse-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
 .cash-reported-btn {
   font-size: 0.7rem;
   font-weight: 600;
@@ -989,4 +999,56 @@ body {
 
 [data-theme="dark"] .cash-calc-subtotal {
   color: #94a3b8;
+}
+
+/*
+ * Печат: само съдържание на формуляра.
+ * URL, дата, час и заглавие по ръбовете идват от браузъра (Chrome „Headers and footers“).
+ * CSS няма официален начин да ги махне — изключи колонтитулите в диалога за печат.
+ * Нулеви @page margins оставят максимално място за бланката; вътрешните отстъпи са на body.
+ */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 10mm !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: economy;
+    print-color-adjust: economy;
+  }
+
+  html::before,
+  html::after,
+  body::before,
+  body::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .app-version,
+  #app-version,
+  #update-banner,
+  #toast,
+  .update-banner,
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body.logistics-print-active > *:not(.print-container) {
+    display: none !important;
+  }
+
+  body.logistics-print-active .print-container {
+    padding: 0 !important;
+  }
 }

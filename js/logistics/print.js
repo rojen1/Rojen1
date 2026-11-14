@@ -56,7 +56,7 @@ function buildPrintCss(wrapper) {
   const self = wrapper || 'html, body';
   const p = wrapper ? `${wrapper} ` : '';
   return `
-  @page { size: A4 portrait; margin: 10mm; }
+  @page { size: A4 portrait; margin: 0; }
   ${self} {
     display: block;
     font-family: Arial, Helvetica, sans-serif;
@@ -64,6 +64,8 @@ function buildPrintCss(wrapper) {
     color: #000;
     line-height: 1.15;
     background: #fff;
+    margin: 0;
+    padding: 10mm;
   }
   ${p}* { box-sizing: border-box; }
   ${p}.sheet {
